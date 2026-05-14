@@ -1,0 +1,434 @@
+<script>
+	/** Copilot — Global Chat with SSE Streaming */
+	import { onMount } from 'svelte';
+	import { apiJson, authHeaders } from '$lib/api';
+	import AgentSteps from '$lib/AgentSteps.svelte';
+	import ThumbsUp from '@lucide/svelte/icons/thumbs-up';
+	import ThumbsDown from '@lucide/svelte/icons/thumbs-down';
+
+	let messages = $state([]);
+	let input = $state('');
+	let isStreaming = $state(false);
+	let sessionId = $state(null);
+	let sessions = $state([]);
+	let showSidebar = $state(true);
+	let statusSteps = $state([]);
+	let currentSuggestions = $state([]);
+
+	// Chat v2 — agent tool-trace state. Gated by X-Chat-Version: 2 response header.
+	let agentTrace = $state({ active: false, steps: [], totalCost: 0, totalTools: 0, startedAt: 0, endedAt: 0 });
+	let runStartedAt = 0;
+
+	function resetAgentTrace() {
+		agentTrace = { active: false, steps: [], totalCost: 0, totalTools: 0, startedAt: 0, endedAt: 0 };
+	}
+
+	function ensureCurrentStep() {
+		if (agentTrace.steps.length === 0) {
+			agentTrace.steps = [{ idx: 1, reasoning: '', tools: [] }];
+		}
+		return agentTrace.steps[agentTrace.steps.length - 1];
+	}
+
+	function fmtSecs(ms) {
+		if (!ms) return '0s';
+		if (ms < 1000) return `${ms}ms`;
+		return `${(ms / 1000).toFixed(1)}s`;
+	}
+
+	function fmtDollar(c) {
+		if (c == null || c === 0) return '$0';
+		return '$' + (c < 0.001 ? c.toFixed(6) : c.toFixed(3));
+	}
+
+	const defaultSuggestions = [
+		"Show me all open positions",
+		"Find top candidates this week",
+		"Create a JD for Product Manager",
+		"What's the hiring pipeline status?",
+		"Compare top 3 backend candidates",
+		"How many candidates are in the repo?"
+	];
+
+	onMount(() => { loadSessions(); });
+
+	async function loadSessions() {
+		try {
+			const data = await apiJson('/chat/sessions');
+			sessions = data.sessions || [];
+		} catch (e) { console.error(e); }
+	}
+
+	async function loadSession(sid) {
+		sessionId = sid;
+		try {
+			const data = await apiJson(`/chat/sessions/${sid}/messages`);
+			messages = (data.messages || []).map(m => ({
+				role: m.role,
+				content: m.content,
+				suggestions: m.suggestions,
+			}));
+			currentSuggestions = messages.at(-1)?.suggestions || [];
+		} catch (e) { console.error(e); }
+	}
+
+	function newSession() {
+		sessionId = null;
+		messages = [];
+		statusSteps = [];
+		currentSuggestions = [];
+		resetAgentTrace();
+	}
+
+	async function send() {
+		if (!input.trim() || isStreaming) return;
+		const msg = input.trim();
+		input = '';
+		messages = [...messages, { role: 'user', content: msg }];
+		isStreaming = true;
+		statusSteps = [];
+		currentSuggestions = [];
+		resetAgentTrace();
+		runStartedAt = Date.now();
+
+		try {
+			const res = await fetch('/api/chat/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', ...authHeaders() },
+				body: JSON.stringify({ message: msg, session_id: sessionId }),
+			});
+
+			// Get session ID from header
+			const newSid = res.headers.get('X-Session-Id');
+			if (newSid) sessionId = parseInt(newSid);
+
+			// Detect chat v2 — backend sets X-Chat-Version: 2 to opt into agent trace UI.
+			const chatVersion = res.headers.get('X-Chat-Version');
+			if (chatVersion === '2') {
+				agentTrace.active = true;
+				agentTrace.startedAt = runStartedAt;
+			}
+
+			// Parse SSE stream
+			const reader = res.body?.getReader();
+			const decoder = new TextDecoder();
+			let buffer = '';
+
+			while (reader) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split('\n');
+				buffer = lines.pop() || '';
+
+				for (const line of lines) {
+					if (line.startsWith('data: ')) {
+						try {
+							const data = JSON.parse(line.slice(6));
+							handleSSEEvent(data);
+						} catch (e) { /* skip malformed */ }
+					} else if (line.startsWith('event: ')) {
+						// event type is in next data line
+					}
+				}
+			}
+		} catch (e) {
+			messages = [...messages, { role: 'assistant', content: `Error: ${e.message}` }];
+		}
+
+		isStreaming = false;
+		if (agentTrace.active) {
+			agentTrace.endedAt = Date.now();
+		}
+		loadSessions(); // Refresh sidebar
+		scrollToBottom();
+	}
+
+	function handleSSEEvent(data) {
+		// --- Chat v2 agent events (only when agentTrace.active; backend gated via header) ---
+		if (agentTrace.active) {
+			// step event: {step_idx, reasoning}
+			if (data.step_idx != null || (data.reasoning != null && data.tool_call == null && data.tool_result == null)) {
+				const idx = data.step_idx ?? agentTrace.steps.length + 1;
+				const existing = agentTrace.steps.find((s) => s.idx === idx);
+				if (existing) {
+					if (data.reasoning) existing.reasoning = data.reasoning;
+				} else {
+					agentTrace.steps = [...agentTrace.steps, { idx, reasoning: data.reasoning || '', tools: [] }];
+				}
+				scrollToBottom();
+				return;
+			}
+			// tool_call event: {name, args}
+			if (data.tool_call) {
+				const tc = data.tool_call;
+				const cur = ensureCurrentStep();
+				cur.tools = [...cur.tools, {
+					name: tc.name,
+					args: tc.args ?? tc.arguments ?? null,
+					output: null,
+					latency_ms: null,
+					cost_usd: null,
+					status: 'running',
+				}];
+				agentTrace.totalTools += 1;
+				scrollToBottom();
+				return;
+			}
+			// tool_result event: {name, output_preview, latency_ms, cost_usd, status}
+			if (data.tool_result) {
+				const tr = data.tool_result;
+				// find the most recent matching tool by name that's still running
+				for (let si = agentTrace.steps.length - 1; si >= 0; si--) {
+					const step = agentTrace.steps[si];
+					for (let ti = step.tools.length - 1; ti >= 0; ti--) {
+						const t = step.tools[ti];
+						if (t.name === tr.name && (t.status === 'running' || !t.output)) {
+							t.output = tr.output_preview ?? tr.output ?? null;
+							t.latency_ms = tr.latency_ms ?? t.latency_ms;
+							t.cost_usd = tr.cost_usd ?? t.cost_usd;
+							t.status = tr.status || 'ok';
+							agentTrace.totalCost += Number(tr.cost_usd) || 0;
+							scrollToBottom();
+							return;
+						}
+					}
+				}
+				return;
+			}
+		}
+
+		// --- Chat v1 events (unchanged) ---
+		if (data.step) {
+			// Status event
+			statusSteps = [...statusSteps, { step: data.step, message: data.message }];
+		}
+		if (data.content) {
+			// Answer event
+			messages = [...messages, {
+				role: 'assistant',
+				content: data.content,
+				suggestions: data.suggestions || [],
+			}];
+			currentSuggestions = data.suggestions || [];
+		}
+		scrollToBottom();
+	}
+
+	function handleKeydown(e) {
+		if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+	}
+
+	function useSuggestion(s) { input = s; send(); }
+
+	async function submitFeedback(messageIndex, feedback) {
+		// Visual only for now — backend saves feedback
+		messages[messageIndex] = { ...messages[messageIndex], feedback };
+	}
+
+	function scrollToBottom() {
+		setTimeout(() => {
+			const el = document.getElementById('chat-messages');
+			if (el) el.scrollTop = el.scrollHeight;
+		}, 50);
+	}
+
+	function formatMessage(content) {
+		// Basic markdown: bold, code, headers
+		return content
+			.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+			.replace(/`(.*?)`/g, '<code style="background: var(--color-surface-highest); padding: 1px 4px; font-size: 0.85em;">$1</code>')
+			.replace(/^### (.*$)/gm, '<h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin: 8px 0 4px;">$1</h3>')
+			.replace(/^## (.*$)/gm, '<h2 style="font-size: 16px; font-weight: 900; text-transform: uppercase; margin: 10px 0 4px;">$1</h2>')
+			.replace(/^# (.*$)/gm, '<h1 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 12px 0 4px;">$1</h1>')
+			.replace(/\n- /g, '\n• ')
+			.replace(/\n\|/g, '\n|')
+			.replace(/\n/g, '<br/>');
+	}
+</script>
+
+<div class="flex h-full">
+	<!-- Sidebar -->
+	{#if showSidebar}
+		<div class="chat-sidebar animate-fade-up">
+			<div class="p-2" style="border-bottom: 2px solid var(--color-on-surface);">
+				<button class="send-btn w-full" style="font-size: 11px; padding: 8px;" onclick={newSession}>+ New Chat</button>
+			</div>
+			<div class="flex-1 overflow-y-auto px-2 pb-2">
+				{#if sessions.length === 0}
+					<p style="font-size: 10px; color: var(--color-on-surface-dim); text-transform: uppercase; padding: 12px 8px; font-weight: 700;">
+						No sessions yet
+					</p>
+				{:else}
+					{#each sessions as s}
+						<button
+							class="sidebar-session"
+							class:sidebar-session-active={sessionId === s.id}
+							onclick={() => loadSession(s.id)}
+						>
+							<div style="font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+								{s.title || 'Untitled'}
+							</div>
+							<div style="font-size: 9px; color: var(--color-on-surface-dim); margin-top: 2px;">
+								{s.message_count || 0} messages
+							</div>
+						</button>
+					{/each}
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Toggle sidebar button -->
+	<button
+		onclick={() => showSidebar = !showSidebar}
+		style="position: absolute; top: 60px; left: {showSidebar ? '268px' : '8px'}; z-index: 10; background: var(--color-surface-bright); border: 2px solid var(--color-on-surface); padding: 4px 8px; cursor: pointer; font-size: 12px; box-shadow: 2px 2px 0 var(--color-on-surface); transition: left 0.2s;">
+		{showSidebar ? '◄' : '►'}
+	</button>
+
+	<!-- Chat Area -->
+	<div class="flex-1 flex flex-col min-w-0">
+		<!-- Messages -->
+		<div class="flex-1 overflow-y-auto p-6" id="chat-messages">
+			{#if messages.length === 0}
+				<!-- Welcome -->
+				<div class="flex flex-col items-center justify-center h-full animate-fade-up">
+					<div class="avatar-agent" style="width: 64px; height: 64px;">
+						<span class="material-symbols-outlined" style="font-size: 32px;">smart_toy</span>
+					</div>
+					<h2 style="font-size: 22px; font-weight: 900; text-transform: uppercase; margin-top: 16px; letter-spacing: -0.02em;">Copilot</h2>
+					<p style="font-size: 12px; color: var(--color-on-surface-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em;">
+						Your talent intelligence assistant
+					</p>
+
+					<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-8" style="max-width: 600px;">
+						{#each defaultSuggestions as s}
+							<button class="suggestion-btn text-left" style="font-size: 10px;" onclick={() => useSuggestion(s)}>
+								{s}
+							</button>
+						{/each}
+					</div>
+				</div>
+			{:else}
+				{#each messages as msg, i}
+					<div class="flex gap-3 mb-4" class:justify-end={msg.role === 'user'} style="animation: fadeUp 0.3s ease-out;">
+						{#if msg.role === 'assistant'}
+							<div class="avatar-agent flex-shrink-0">
+								<span class="material-symbols-outlined" style="font-size: 16px;">smart_toy</span>
+							</div>
+						{/if}
+						<div class="flex flex-col gap-1 {msg.role === 'user' ? '' : 'flex-1'}" style="max-width: {msg.role === 'user' ? '75%' : '100%'};">
+							<div class={msg.role === 'user' ? 'bubble-user' : 'bubble-assistant'}>
+								<div class="prose-chat">{@html formatMessage(msg.content)}</div>
+							</div>
+							<!-- Feedback + Suggestions for assistant messages -->
+							{#if msg.role === 'assistant'}
+								<div class="flex items-center gap-2 mt-1">
+									<button class="feedback-btn" style="font-size: 11px; {msg.feedback === 'thumbs_up' ? 'background: var(--color-primary); color: white;' : ''}"
+										onclick={() => submitFeedback(i, 'thumbs_up')}><ThumbsUp size={13} strokeWidth={1.75} /></button>
+									<button class="feedback-btn" style="font-size: 11px; {msg.feedback === 'thumbs_down' ? 'background: var(--color-error); color: white;' : ''}"
+										onclick={() => submitFeedback(i, 'thumbs_down')}><ThumbsDown size={13} strokeWidth={1.75} /></button>
+								</div>
+							{/if}
+						</div>
+						{#if msg.role === 'user'}
+							<div class="avatar-user flex-shrink-0">U</div>
+						{/if}
+					</div>
+				{/each}
+
+				<!-- Chat v2 — Agent tool trace (above answer/streaming) -->
+				{#if agentTrace.active && (agentTrace.steps.length > 0 || isStreaming)}
+					<div class="ml-11 mb-4">
+						<AgentSteps steps={agentTrace.steps} active={isStreaming} />
+						{#if !isStreaming && agentTrace.endedAt > agentTrace.startedAt}
+							<div class="agent-footer">
+								AGENT · {agentTrace.steps.length} STEP{agentTrace.steps.length === 1 ? '' : 'S'} · {agentTrace.totalTools} TOOL{agentTrace.totalTools === 1 ? '' : 'S'} · {fmtDollar(agentTrace.totalCost)} · {fmtSecs(agentTrace.endedAt - agentTrace.startedAt)}
+							</div>
+						{/if}
+					</div>
+				{/if}
+
+				<!-- Streaming status -->
+				{#if isStreaming && !agentTrace.active}
+					<div class="flex gap-3 mb-4">
+						<div class="avatar-agent flex-shrink-0">
+							<span class="material-symbols-outlined" style="font-size: 16px;">smart_toy</span>
+						</div>
+						<div>
+							{#if statusSteps.length > 0}
+								<div class="cli-terminal" style="margin-bottom: 8px; padding: 10px 14px; font-size: 11px;">
+									{#each statusSteps as step}
+										<div class="cli-line">
+											<span class="cli-check">✓</span>
+											<span class="cli-output">{step.message}</span>
+										</div>
+									{/each}
+									<div class="cli-line">
+										<span class="cli-spinner"><span></span><span></span><span></span></span>
+										<span class="cli-output">Processing...</span>
+									</div>
+								</div>
+							{:else}
+								<div class="bubble-assistant">
+									<div class="typing-indicator"><span></span><span></span><span></span></div>
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/if}
+
+				<!-- Suggestions after last message -->
+				{#if currentSuggestions.length > 0 && !isStreaming}
+					<div class="flex gap-2 flex-wrap mb-4 ml-11">
+						{#each currentSuggestions as s}
+							<button class="suggestion-btn" style="font-size: 10px;" onclick={() => useSuggestion(s)}>
+								{s}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			{/if}
+		</div>
+
+		<!-- Input -->
+		<div class="input-bar p-4" style="flex-shrink: 0;">
+			<div class="flex gap-2 items-end">
+				<textarea
+					bind:value={input}
+					onkeydown={handleKeydown}
+					placeholder="ASK HR BRAIN ANYTHING..."
+					rows="1"
+					style="min-height: 42px; max-height: 120px;"
+				></textarea>
+				<button
+					class="send-btn"
+					disabled={!input.trim() || isStreaming}
+					onclick={send}
+					style="font-size: 16px; min-width: 48px;"
+				>
+					{isStreaming ? '■' : '→'}
+				</button>
+			</div>
+			<div style="font-size: 9px; color: var(--color-on-surface-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; text-align: center;">
+				Copilot · Powered by AI · Responses may not always be accurate
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	.agent-footer {
+		font-family: 'JetBrains Mono', 'Space Mono', 'Menlo', monospace;
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #383832;
+		opacity: 0.6;
+		padding: 6px 10px;
+		border-top: 1px dashed rgba(56, 56, 50, 0.25);
+		text-align: right;
+	}
+</style>

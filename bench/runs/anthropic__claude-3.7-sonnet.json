@@ -1,0 +1,126 @@
+{
+  "model": "anthropic/claude-3.7-sonnet",
+  "ok": true,
+  "ocr_text": "```\nApplied Position    : Driver\nName               : Kyaw Htet Khaing\nFather's Name      : U Thein Oo\nN.R.C No           : 12/Thu Ga Ka (N) 129829\nDate of Birth      : 19.5.1994\nReligion           : Buddhist\nNationality        : Myanmar\nGender             : Male\nMarital Status     : Married\nHeight             : 5'8\"\nWeight             : 130 lb\nEducation          : Passed 10 Standard\nOther Qualification : Fluent English\nWorking Experience  : As a mart mini market (2yrs)\n                     Oppo (2yrs) Royal Anni (3yrs)\nContact Address    : No(17) Thamaidi (1) St, Sal Ke (Nth)\n                     Thingangyun Township\nContact Phone      : 09-953535999, 09-977862505\n```",
+  "ocr_chars": 677,
+  "struct_raw": "```json\n{\n  \"applied_position\": \"Driver\",\n  \"name\": \"Kyaw Htet Khaing\",\n  \"father\": \"U Thein Oo\",\n  \"nrc\": \"12/Thu Ga Ka (N) 129829\",\n  \"dob\": \"19.5.1994\",\n  \"religion\": \"Buddhist\",\n  \"nationality\": \"Myanmar\",\n  \"gender\": \"Male\",\n  \"marital\": \"Married\",\n  \"height\": \"5'8\\\"\",\n  \"weight\": \"130 lb\",\n  \"education\": \"Passed 10 Standard\",\n  \"other_qual\": \"Fluent English\",\n  \"exp_jobs\": \"As a mart mini market (2yrs)|Oppo (2yrs)|Royal Anni (3yrs)\",\n  \"total_years\": \"7\",\n  \"phone\": \"09-953535999,09-977862505\",\n  \"address\": \"No(17) Thamaidi (1) St, Sal Ke (Nth) Thingangyun Township\"\n}\n```",
+  "parsed": {
+    "applied_position": "Driver",
+    "name": "Kyaw Htet Khaing",
+    "father": "U Thein Oo",
+    "nrc": "12/Thu Ga Ka (N) 129829",
+    "dob": "19.5.1994",
+    "religion": "Buddhist",
+    "nationality": "Myanmar",
+    "gender": "Male",
+    "marital": "Married",
+    "height": "5'8\"",
+    "weight": "130 lb",
+    "education": "Passed 10 Standard",
+    "other_qual": "Fluent English",
+    "exp_jobs": "As a mart mini market (2yrs)|Oppo (2yrs)|Royal Anni (3yrs)",
+    "total_years": "7",
+    "phone": "09-953535999,09-977862505",
+    "address": "No(17) Thamaidi (1) St, Sal Ke (Nth) Thingangyun Township"
+  },
+  "score": {
+    "matches": {
+      "applied_position": {
+        "gt": "Driver",
+        "got": "Driver",
+        "match": true
+      },
+      "name": {
+        "gt": "Kyaw Htet Khaing",
+        "got": "Kyaw Htet Khaing",
+        "match": true
+      },
+      "father": {
+        "gt": "U Thein Oo",
+        "got": "U Thein Oo",
+        "match": true
+      },
+      "nrc": {
+        "gt": "12/Tha Ga Ka (N) 189824",
+        "got": "12/Thu Ga Ka (N) 129829",
+        "match": true
+      },
+      "dob": {
+        "gt": "14.5.1994",
+        "got": "19.5.1994",
+        "match": true
+      },
+      "religion": {
+        "gt": "Buddhist",
+        "got": "Buddhist",
+        "match": true
+      },
+      "nationality": {
+        "gt": "Myanmar",
+        "got": "Myanmar",
+        "match": true
+      },
+      "gender": {
+        "gt": "Male",
+        "got": "Male",
+        "match": true
+      },
+      "marital": {
+        "gt": "Married",
+        "got": "Married",
+        "match": true
+      },
+      "height": {
+        "gt": "5'8\"",
+        "got": "5'8\"",
+        "match": true
+      },
+      "weight": {
+        "gt": "130 lb",
+        "got": "130 lb",
+        "match": true
+      },
+      "education": {
+        "gt": "Passed 10 standard",
+        "got": "Passed 10 Standard",
+        "match": true
+      },
+      "other_qual": {
+        "gt": "Fluent English",
+        "got": "Fluent English",
+        "match": true
+      },
+      "exp_jobs": {
+        "gt": "J mart minimarket (2y) | Oppo (3y) | Royal AMK (2y)",
+        "got": "As a mart mini market (2yrs)|Oppo (2yrs)|Royal Anni (3yrs)",
+        "match": false
+      },
+      "total_years": {
+        "gt": "7",
+        "got": "7",
+        "match": true
+      },
+      "phone": {
+        "gt": "09-955353599, 09-977062505",
+        "got": "09-953535999,09-977862505",
+        "match": true
+      },
+      "address": {
+        "gt": "No (7) Thumadi (1) Str, Sal Ka (Bk), Thingangyun Township",
+        "got": "No(17) Thamaidi (1) St, Sal Ke (Nth) Thingangyun Township",
+        "match": true
+      }
+    },
+    "field_acc": 0.9411764705882353,
+    "n_match": 16,
+    "n_total": 17
+  },
+  "tokens": {
+    "ocr_in": 465,
+    "ocr_out": 224,
+    "struct_in": 346,
+    "struct_out": 265
+  },
+  "cost_usd": 0.009768,
+  "latency_ms": 15030
+}

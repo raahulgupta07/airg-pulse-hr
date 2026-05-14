@@ -1,0 +1,94 @@
+# ============================================================
+# PULSE — Instance Configuration
+# People · Updates · Lifecycle · Sourcing · Engagement
+# Change this file to customize branding and agent persona.
+# No code changes needed — just edit and rebuild.
+# ============================================================
+
+# -- App Branding --
+app:
+  name: "Pulse"
+  tagline: "Org Heartbeat — People · Updates · Lifecycle · Sourcing · Engagement"
+  description: "AI-powered org platform — hiring, internal communications, job posting, broadcast & ads, candidate matching, HR Brain chatbot"
+  icon: "monitor_heart"
+  primary_color: "#007518"
+
+# -- Agent Persona --
+agent:
+  name: "HR Brain"
+  role: "talent intelligence assistant"
+  focus: "CV processing, job description creation, candidate-JD matching, recruitment pipeline management, HR document generation"
+  personality: "professional, efficient, data-driven, fair"
+  languages:
+    - English
+
+# -- Position Categories --
+categories:
+  - engineering/backend
+  - engineering/frontend
+  - engineering/fullstack
+  - engineering/devops
+  - engineering/data
+  - engineering/ml-ai
+  - product/management
+  - product/design
+  - product/research
+  - business/sales
+  - business/marketing
+  - business/operations
+  - business/finance
+  - business/hr
+  - leadership/executive
+  - leadership/director
+  - leadership/manager
+
+# -- Seniority Levels --
+seniority_levels:
+  - intern
+  - junior
+  - mid
+  - senior
+  - staff
+  - principal
+  - lead
+  - manager
+  - director
+  - vp
+  - c-level
+
+# -- Pipeline Stages --
+pipeline_stages:
+  - uploaded
+  - screened
+  - shortlisted
+  - interview_scheduled
+  - interviewed
+  - offered
+  - hired
+  - rejected
+
+# -- Template Categories --
+template_categories:
+  - offer_letter
+  - rejection_email
+  - interview_invite
+  - interview_scorecard
+  - onboarding_checklist
+  - reference_check
+  - candidate_summary
+  - custom
+
+# -- Widget --
+widget:
+  title: "HR Brain"
+  welcome: "Hi! I can help you find candidates, create job descriptions, and manage your hiring pipeline. What do you need?"
+  placeholder: "Ask about candidates, positions, or HR tasks..."
+
+# -- Example Questions --
+example_questions:
+  - "Show me all open positions"
+  - "Find top candidates for the Backend Engineer role"
+  - "Create a JD for Senior Product Manager"
+  - "Compare the top 3 candidates for the PM position"
+  - "Draft rejection emails for candidates below 60% match"
+  - "What's the hiring pipeline status?"

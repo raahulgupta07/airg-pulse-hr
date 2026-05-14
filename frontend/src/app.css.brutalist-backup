@@ -1,0 +1,873 @@
+@import "tailwindcss";
+
+/* ================================================================
+   HIRE — Brutalist / Industrial / Newspaper Design System
+   Adapted from Dash + Scout design systems.
+   Sharp corners, stamp shadows, ink borders, warm yellow surface.
+   ================================================================ */
+
+/* GLOBAL: Zero border-radius — brutalist sharp corners */
+* { border-radius: 0px !important; }
+
+@theme {
+  --font-headline: 'Space Grotesk', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-label: 'Space Grotesk', sans-serif;
+
+  /* -- Surface palette (newspaper yellow) -- */
+  --color-surface: #feffd6;
+  --color-surface-low: #fcf9ef;
+  --color-surface-container: #f6f4e9;
+  --color-surface-high: #f1eee3;
+  --color-surface-highest: #ebe8dd;
+  --color-surface-bright: #fffff0;
+
+  /* -- Ink / text -- */
+  --color-on-surface: #383832;
+  --color-on-surface-dim: #6b6b60;
+  --color-on-surface-variant: #65655e;
+  --color-outline: #828179;
+  --color-outline-variant: #bbb9b1;
+
+  /* -- Semantic colors -- */
+  --color-primary: #007518;
+  --color-primary-container: #00fc40;
+  --color-secondary: #006f7c;
+  --color-secondary-container: #26e6ff;
+  --color-tertiary: #9d4867;
+  --color-tertiary-container: #fe97b9;
+  --color-error: #be2d06;
+  --color-error-container: #f95630;
+  --color-warning: #ff9d00;
+
+  --font-family-display: 'Space Grotesk', monospace, sans-serif;
+}
+
+/* Force light scheme app-wide. /login keeps its own dark terminal bg
+   via local styles inside the login component (terminal panel, brand block),
+   which override at higher specificity. */
+html, body {
+  color-scheme: light;
+  background: #feffd6 !important;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+html { height: 100%; }
+
+/* Main app shell — ensure the area between dark header and green footer
+   is the brand yellow surface, not browser-default dark. */
+main, main > div {
+  background: #feffd6;
+}
+
+/* -- Material Symbols -- */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
+/* -- Selection -- */
+::selection { background: #007518; color: white; }
+
+/* Force pointer on interactive elements */
+button, a, [role="button"] { cursor: pointer; }
+
+/* ================================================================
+   Scrollbar
+   ================================================================ */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--color-surface-container); }
+::-webkit-scrollbar-thumb { background: var(--color-on-surface); }
+
+/* ================================================================
+   Utility Classes
+   ================================================================ */
+
+/* Asymmetric ink border — heavier bottom/right like letterpress */
+.ink-border {
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 4px;
+  border-bottom-width: 4px;
+}
+
+/* Hard stamp shadow — no blur, like a rubber stamp */
+.stamp-shadow { box-shadow: 4px 4px 0px 0px var(--color-on-surface); }
+.stamp-shadow-sm { box-shadow: 3px 3px 0px 0px var(--color-on-surface); }
+
+/* Dark tag label */
+.tag-label {
+  display: inline-block;
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  line-height: 1.4;
+}
+
+/* Dark title bar */
+.dark-title-bar {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  padding: 8px 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+/* Active tab state */
+.tab-active {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+}
+
+/* ================================================================
+   Chat Bubbles
+   ================================================================ */
+.bubble-user {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 4px;
+  border-bottom-width: 4px;
+  padding: 12px 16px;
+  max-width: 75%;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bubble-assistant {
+  background: var(--color-surface-bright);
+  color: var(--color-on-surface);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 4px;
+  border-bottom-width: 4px;
+  box-shadow: 4px 4px 0px 0px var(--color-on-surface);
+  padding: 16px 20px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow: hidden;
+}
+
+/* ================================================================
+   Chat Prose (markdown in assistant bubbles)
+   ================================================================ */
+.prose-chat p { margin: 0 0 8px 0; }
+.prose-chat p:last-child { margin-bottom: 0; }
+.prose-chat strong { font-weight: 900; }
+.prose-chat em { font-style: italic; }
+
+.prose-chat code {
+  background: var(--color-surface-highest);
+  padding: 1px 6px;
+  font-size: 0.85em;
+  font-family: monospace;
+  border: 1px solid var(--color-on-surface);
+}
+
+.prose-chat pre {
+  background: var(--color-on-surface);
+  color: var(--color-primary-container);
+  padding: 12px 16px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 8px 0;
+  border: 2px solid var(--color-on-surface);
+}
+
+.prose-chat pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+.prose-chat ul, .prose-chat ol { margin: 8px 0; padding-left: 20px; }
+.prose-chat li { margin: 2px 0; }
+
+.prose-chat h1, .prose-chat h2, .prose-chat h3 {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 12px 0 6px 0;
+}
+.prose-chat h1 { font-size: 18px; }
+.prose-chat h2 { font-size: 16px; }
+.prose-chat h3 { font-size: 14px; }
+
+/* Tables in prose */
+.prose-chat table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+  display: block;
+  overflow-x: auto;
+  border: 2px solid var(--color-on-surface);
+}
+
+.prose-chat th {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  padding: 9px 14px;
+  text-align: left;
+  font-weight: 900;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--color-on-surface);
+  border-right: 1px solid rgba(255,255,255,0.12);
+  white-space: nowrap;
+}
+
+.prose-chat td {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e5e5e0;
+  line-height: 1.5;
+}
+
+.prose-chat tr:nth-child(even) td { background: #fafaf8; }
+.prose-chat tr:hover td { background: #f0efe8; }
+
+/* ================================================================
+   Dashboard Tabs
+   ================================================================ */
+.dash-tabs { display: flex; gap: 0; position: relative; z-index: 1; }
+
+.dash-tab {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--color-surface-high);
+  border: 2px solid var(--color-on-surface);
+  border-right: none;
+  font-family: var(--font-family-display);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-on-surface-dim);
+  transition: background 0.1s;
+}
+
+.dash-tab:last-child { border-right: 2px solid var(--color-on-surface); }
+.dash-tab:hover { background: var(--color-surface); }
+
+.dash-tab-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--color-on-surface);
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.dash-tab-active {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  border-bottom-color: var(--color-on-surface);
+}
+
+.dash-tab-active .dash-tab-value { color: var(--color-primary-container); }
+.dash-tab-active:hover { background: var(--color-on-surface); }
+
+.dash-panel {
+  border: 2px solid var(--color-on-surface);
+  border-top: none;
+  background: var(--color-surface-bright);
+  padding: 20px;
+  margin-top: -2px;
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ================================================================
+   Navigation
+   ================================================================ */
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-family-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  color: var(--color-surface);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); color: white; }
+
+.nav-btn-active {
+  background: var(--color-primary-container);
+  color: var(--color-on-surface);
+  border-color: var(--color-on-surface);
+}
+
+/* ================================================================
+   Data Table
+   ================================================================ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-family-display);
+  font-size: 13px;
+  border: 2px solid var(--color-on-surface);
+}
+
+.data-table th {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  padding: 9px 14px;
+  text-align: left;
+  font-weight: 900;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--color-on-surface);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.data-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e5e5e0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.data-table tbody tr { transition: background 0.1s ease; }
+.data-table tbody tr:nth-child(even) td { background: #fafaf8; }
+.data-table tbody tr:hover td { background: #f0efe8; }
+
+/* ================================================================
+   Input Area
+   ================================================================ */
+.input-bar {
+  background: var(--color-surface-bright);
+  border-top: 3px solid var(--color-on-surface);
+}
+
+.input-bar textarea {
+  background: var(--color-surface);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  font-family: var(--font-family-display);
+  font-size: 14px;
+  color: var(--color-on-surface);
+  resize: none;
+  outline: none;
+  padding: 10px 14px;
+  width: 100%;
+}
+
+.input-bar textarea:focus { border-color: var(--color-primary); }
+
+.input-bar textarea::placeholder {
+  color: var(--color-on-surface-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+}
+
+/* ================================================================
+   Buttons
+   ================================================================ */
+.send-btn {
+  background: var(--color-primary-container);
+  color: var(--color-on-surface);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  font-family: var(--font-family-display);
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 10px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.send-btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0px 0px var(--color-on-surface); }
+.send-btn:active { transform: translate(0, 0); box-shadow: none; }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-danger {
+  background: var(--color-error);
+  color: white;
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  font-family: var(--font-family-display);
+  font-weight: 900;
+  font-size: 11px;
+  padding: 8px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  font-family: var(--font-family-display);
+  font-weight: 900;
+  font-size: 11px;
+  padding: 8px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+
+.btn-secondary:hover { opacity: 0.85; }
+
+/* ================================================================
+   Suggestion Buttons
+   ================================================================ */
+.suggestion-btn {
+  background: var(--color-surface-bright);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  color: var(--color-on-surface);
+  font-family: var(--font-family-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.suggestion-btn:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px 0px var(--color-on-surface); }
+.suggestion-btn:active { transform: translate(0, 0); box-shadow: none; }
+
+/* ================================================================
+   Chat Sidebar
+   ================================================================ */
+.chat-sidebar {
+  width: 260px;
+  background: var(--color-surface-bright);
+  border-right: 2px solid var(--color-on-surface);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-session {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: var(--font-family-display);
+  display: block;
+  margin-bottom: 2px;
+  transition: background 0.1s;
+}
+
+.sidebar-session:hover { background: var(--color-surface-high); border-color: var(--color-on-surface); }
+
+.sidebar-session-active {
+  background: var(--color-surface-high);
+  border-color: var(--color-on-surface);
+  border-left: 3px solid var(--color-primary);
+}
+
+/* ================================================================
+   Drop Zone (Upload)
+   ================================================================ */
+.drop-zone {
+  border: 3px dashed var(--color-on-surface);
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.drop-zone:hover, .drop-zone-active { background: var(--color-surface-high); }
+
+/* ================================================================
+   CLI Terminal
+   ================================================================ */
+.cli-terminal {
+  background: #1a1a1a;
+  color: #00fc40;
+  font-family: 'Space Grotesk', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 14px 18px;
+  border: 2px solid var(--color-on-surface);
+  border-bottom-width: 3px;
+  overflow-x: auto;
+}
+
+.cli-terminal .cli-prompt { color: #00fc40; font-weight: 700; }
+.cli-terminal .cli-command { color: #e0e0e0; }
+.cli-terminal .cli-output { color: #8a8a9a; }
+.cli-terminal .cli-success { color: #00fc40; }
+.cli-terminal .cli-info { color: #00b4d8; }
+.cli-terminal .cli-dim { color: #555; }
+.cli-terminal .cli-check { color: #00fc40; font-weight: 700; }
+
+.cli-terminal .cli-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.cli-terminal .cli-spinner {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.cli-terminal .cli-spinner span {
+  width: 4px;
+  height: 4px;
+  background: #00fc40;
+  display: block;
+  animation: cliBlink 1.2s infinite ease-in-out;
+}
+
+.cli-terminal .cli-spinner span:nth-child(2) { animation-delay: 0.2s; }
+.cli-terminal .cli-spinner span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ================================================================
+   Score Bar (for CV-JD match visualization)
+   ================================================================ */
+.score-bar {
+  height: 8px;
+  background: var(--color-surface-highest);
+  border: 1px solid var(--color-on-surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.score-bar-fill.score-high { background: var(--color-primary); }
+.score-bar-fill.score-mid { background: var(--color-warning); }
+.score-bar-fill.score-low { background: var(--color-error); }
+
+/* ================================================================
+   Pipeline Kanban
+   ================================================================ */
+.kanban-column {
+  min-width: 180px;
+  background: var(--color-surface-container);
+  border: 2px solid var(--color-on-surface);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.kanban-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  padding: 10px 12px;
+  margin: 6px;
+  cursor: grab;
+  font-family: var(--font-family-display);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.kanban-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px 0px var(--color-on-surface);
+}
+
+/* ================================================================
+   Position Card
+   ================================================================ */
+.position-card {
+  background: var(--color-surface-bright);
+  border: 2px solid var(--color-on-surface);
+  border-right-width: 4px;
+  border-bottom-width: 4px;
+  padding: 0;
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+}
+
+.position-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px 0px var(--color-on-surface);
+}
+
+/* ================================================================
+   Candidate Row
+   ================================================================ */
+.candidate-row {
+  background: var(--color-surface-bright);
+  border: 2px solid var(--color-on-surface);
+  border-bottom-width: 3px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  transition: background 0.1s;
+}
+
+.candidate-row:hover { background: var(--color-surface-container); }
+
+/* ================================================================
+   Avatars
+   ================================================================ */
+.avatar-user {
+  width: 32px;
+  height: 32px;
+  background: var(--color-on-surface);
+  color: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-on-surface);
+  flex-shrink: 0;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.avatar-agent {
+  width: 32px;
+  height: 32px;
+  background: var(--color-primary-container);
+  color: var(--color-on-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-on-surface);
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   Feedback Buttons
+   ================================================================ */
+.feedback-btn {
+  background: none;
+  border: 1px solid var(--color-on-surface);
+  color: var(--color-on-surface);
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-family-display);
+  transition: background 0.1s;
+}
+
+.feedback-btn:hover { background: var(--color-surface-high); }
+
+/* ================================================================
+   Animations
+   ================================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 0.3s ease-out; }
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in { animation: slide-in 0.3s ease-out; }
+
+@keyframes sectionFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section-animate > * { opacity: 0; animation: sectionFadeIn 0.4s ease-out forwards; }
+.section-animate > *:nth-child(1) { animation-delay: 0.05s; }
+.section-animate > *:nth-child(2) { animation-delay: 0.15s; }
+.section-animate > *:nth-child(3) { animation-delay: 0.25s; }
+.section-animate > *:nth-child(4) { animation-delay: 0.35s; }
+.section-animate > *:nth-child(5) { animation-delay: 0.45s; }
+.section-animate > *:nth-child(6) { animation-delay: 0.55s; }
+.section-animate > *:nth-child(7) { animation-delay: 0.65s; }
+.section-animate > *:nth-child(8) { animation-delay: 0.75s; }
+.section-animate > *:nth-child(n+9) { animation-delay: 0.85s; }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+.skeleton { background: #ebe8dd; animation: skeleton-pulse 1.5s ease-in-out infinite; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+@keyframes cliBlink {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes panelSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ================================================================
+   Typing Indicator
+   ================================================================ */
+.typing-indicator {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  display: block;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) { background: var(--color-primary); animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { background: var(--color-warning); animation-delay: -0.16s; }
+.typing-indicator span:nth-child(3) { background: var(--color-error); animation-delay: 0s; }
+
+/* ================================================================
+   Response Tabs
+   ================================================================ */
+.response-tabs { display: flex; gap: 0; margin-top: 10px; margin-bottom: -2px; position: relative; z-index: 1; }
+
+.response-tab {
+  background: var(--color-surface-high);
+  border: 2px solid var(--color-on-surface);
+  border-bottom: 2px solid var(--color-on-surface);
+  padding: 7px 16px;
+  font-family: var(--font-family-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  color: var(--color-on-surface-dim);
+  transition: background 0.15s;
+  margin-right: -2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.response-tab:hover { background: var(--color-surface-bright); color: var(--color-on-surface); }
+
+.response-tab-active {
+  background: var(--color-surface-bright);
+  color: var(--color-on-surface);
+  font-weight: 900;
+  border-bottom-color: var(--color-surface-bright);
+}
+
+.response-tab-dim { opacity: 0.35; cursor: default; }
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-container);
+  color: var(--color-on-surface);
+  font-size: 9px;
+  font-weight: 900;
+  padding: 1px 5px;
+  min-width: 16px;
+  border: 1px solid var(--color-on-surface);
+}
+
+/* ================================================================
+   Mobile Responsive
+   ================================================================ */
+@media (max-width: 768px) {
+  .chat-sidebar { display: none; }
+  .kanban-column { min-width: 150px; }
+  .position-card { width: 100%; }
+}
+
+/* ================================================================
+   Status Colors (pipeline stages)
+   ================================================================ */
+.status-uploaded { background: #9d9d91; color: white; }
+.status-screened { background: #006f7c; color: white; }
+.status-shortlisted { background: #007518; color: white; }
+.status-interview { background: #ff9d00; color: white; }
+.status-offered { background: #9d4867; color: white; }
+.status-hired { background: #00fc40; color: #383832; }
+.status-rejected { background: #be2d06; color: white; }
+
+/* Global pointer cursor on all interactive elements */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a[href],
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="file"],
+select,
+summary,
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]),
+.btn,
+.btn-primary,
+.btn-secondary,
+.send-btn,
+.btn-run,
+.btn-retry,
+.row-action-danger,
+.tab,
+.scope-option,
+.position-card,
+.cv-row,
+.nav-link {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+.disabled {
+  cursor: not-allowed;
+}

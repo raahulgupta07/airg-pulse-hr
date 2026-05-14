@@ -1,0 +1,211 @@
+# ============================================================================
+# PULSE — Org Heartbeat (P · U · L · S · E)
+# ============================================================================
+# 2 containers: API (+ frontend), Database
+# Single port deployment.
+#
+# Quick start:
+#   cp .env.example .env  # Edit with real values
+#   docker compose up -d --build
+# ============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # PostgreSQL + pgvector
+  # --------------------------------------------------------------------------
+  db:
+    image: pgvector/pgvector:pg18-trixie
+    container_name: pulse-db
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '2'
+        reservations:
+          memory: 1G
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      POSTGRES_USER: ${DB_USER:-pulse}
+      POSTGRES_PASSWORD: ${DB_PASS:-pulse_secret}
+      POSTGRES_DB: ${DB_DATABASE:-pulsedb}
+    # PG tuning for ~10 concurrent users (4 api workers × 5 conns each = 20 baseline)
+    command:
+      - postgres
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - idle_in_transaction_session_timeout=60000
+      - -c
+      - statement_timeout=120000
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pulse}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pulse
+
+  # --------------------------------------------------------------------------
+  # FastAPI + Frontend (single container, single port)
+  # --------------------------------------------------------------------------
+  api:
+    container_name: pulse-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64
+        - linux/amd64
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4'
+        reservations:
+          memory: 2G
+    ports:
+      - "${PORT:-8090}:8000"
+    volumes:
+      # ----------------------------------------------------------------------
+      # CV / artifact storage
+      # ----------------------------------------------------------------------
+      # Using a NAMED VOLUME (`hire-data`): managed by Docker, persists across
+      #   `docker compose up/down`, but is DESTROYED by `docker volume rm hire-data`
+      #   and not directly visible on the host filesystem. Good for dev.
+      #
+      # For PRODUCTION, prefer a BIND MOUNT so CVs live on the host disk and can
+      # be backed up / inspected without entering the container. Replace the line
+      # below with:
+      #   - ./data/cvs:/data/cvs
+      # (and ensure the host `./data/cvs` directory exists and is writable by
+      #  the container user).
+      #
+      # 2026-05-14: switched bind ./data → named volume `hire-data`.
+      # CVs / screenshots / uploads / exports now live INSIDE Docker, not on Mac.
+      # Inspect: `docker exec pulse-api ls /data/cvs`
+      # Extract: `docker cp pulse-api:/data ./local-data-snapshot`
+      # Wipe:    `docker compose down && docker volume rm hub-hr-agent_hire-data`
+      - hire-data:/data
+      # ----------------------------------------------------------------------
+      # Frontend build (live edits survive container recreate)
+      # `npm run build` → ./frontend/build → served at /app/static-frontend
+      # No need to rebuild image after frontend changes.
+      # ----------------------------------------------------------------------
+      - ./frontend/build:/app/static-frontend:ro
+    environment:
+      DB_HOST: db
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY in .env}
+      WAIT_FOR_DB: "true"
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pulse
+
+  # --------------------------------------------------------------------------
+  # Redis — Agno agent memory / cache (chat v2, flag-gated)
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: pulse-redis
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    networks:
+      - pulse
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # AUTOMATED BACKUP SIDECAR
+  # --------------------------------------------------------------------------
+  # Runs an in-container daemon loop that pg_dumps the `pulsedb` every 24 hours
+  # to ./data/backups (host bind mount). Each dump is gzipped, the newest is
+  # symlinked as `latest.dump.gz`, and dumps older than 14 days are pruned.
+  #
+  # - Image matches the database major version (postgres:18) so pg_dump format
+  #   is guaranteed compatible.
+  # - Sidecar is decoupled from `api`: it only `depends_on: db`. API startup is
+  #   never blocked by backup activity.
+  # - Restore: see scripts/restore.sh
+  # - Manual / pre-upgrade snapshot: see scripts/pre_upgrade.sh
+  # - Disaster recovery: see DEPLOYMENT.md → "Data Persistence"
+  # --------------------------------------------------------------------------
+  backup:
+    image: postgres:18
+    container_name: pulse-backup
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pulse
+    volumes:
+      - hire-backups:/backups
+    env_file:
+      - .env
+    environment:
+      PGPASSWORD: ${DB_PASS:-pulse_secret}
+      DB_USER: ${DB_USER:-pulse}
+      DB_DATABASE: ${DB_DATABASE:-pulsedb}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        echo "[backup] sidecar starting; backups dir=/backups, retention=14d, interval=24h"
+        mkdir -p /backups
+        while true; do
+          TS=$$(date +%Y%m%d_%H%M)
+          DUMP="/backups/pulse_$${TS}.dump"
+          echo "[backup] $$(date -Iseconds) starting pg_dump -> $${DUMP}"
+          if pg_dump -h db -U "$${DB_USER}" -d "$${DB_DATABASE}" -F c -f "$${DUMP}"; then
+            gzip -f "$${DUMP}"
+            ln -sfn "pulse_$${TS}.dump.gz" /backups/latest.dump.gz
+            echo "[backup] $$(date -Iseconds) wrote $${DUMP}.gz; updated latest.dump.gz"
+          else
+            echo "[backup] $$(date -Iseconds) pg_dump FAILED" >&2
+            rm -f "$${DUMP}"
+          fi
+          # prune dumps older than 14 days
+          find /backups -name 'pulse_*.dump.gz' -mtime +14 -delete -print | sed 's/^/[backup] pruned /'
+          echo "[backup] sleeping 86400s"
+          sleep 86400
+        done
+
+networks:
+  pulse:
+    driver: bridge
+
+# NOTE: volume names kept (`pgdata`, `hire-data`) to preserve existing data on
+# upgrade. To start clean under PULSE branding, run `docker compose down -v`
+# (DESTRUCTIVE — wipes all CVs + DB) before rebuild.
+volumes:
+  pgdata:
+  hire-data:
+  hire-backups:

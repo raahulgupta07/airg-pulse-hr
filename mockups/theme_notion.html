@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PULSE — Notion / Claude warm theme</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface-2: #f7f5f1;
+    --ink: #2f2f2f;
+    --ink-soft: #5a5a5a;
+    --muted: #8a8780;
+    --dim: #b8b4ab;
+    --border: #ebe7df;
+    --border-soft: #f1ede5;
+    --accent: #d97706;       /* Claude orange */
+    --accent-soft: #fff7ed;
+    --accent-ink: #9a3412;
+    --green: #166534;
+    --green-soft: #f0fdf4;
+    --amber: #b45309;
+    --amber-soft: #fef3c7;
+    --red: #991b1b;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .serif { font-family: 'Charter', 'Lora', 'Source Serif Pro', Georgia, serif; }
+
+  .nav {
+    height: 56px; display: flex; align-items: center; gap: 4px;
+    padding: 0 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 17px; margin-right: 28px;
+    font-family: 'Charter', Georgia, serif;
+  }
+  .brand-logo {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 14px; font-weight: 700;
+    font-family: Georgia, serif;
+  }
+  .nav-item {
+    padding: 7px 12px; border-radius: var(--radius);
+    color: var(--ink-soft); cursor: pointer; font-size: 14px;
+    font-weight: 500;
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--ink); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent-ink); }
+  .nav-spacer { flex: 1; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-icon-btn {
+    padding: 7px 10px; border-radius: var(--radius);
+    background: transparent; border: none; cursor: pointer;
+    color: var(--ink-soft); font-size: 14px;
+  }
+  .nav-icon-btn:hover { background: var(--surface-2); }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 12px; font-weight: 600;
+  }
+
+  .page {
+    max-width: 1100px; margin: 0 auto; padding: 48px 32px;
+  }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .page-title {
+    font-size: 32px; font-weight: 600; margin: 0;
+    font-family: 'Charter', Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+  .page-sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+
+  .seg {
+    display: inline-flex; gap: 2px; padding: 3px;
+    background: var(--surface-2); border-radius: var(--radius);
+  }
+  .seg-item {
+    padding: 5px 12px; border-radius: 4px; font-size: 13px;
+    color: var(--ink-soft); cursor: pointer;
+  }
+  .seg-item.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+
+  .btn {
+    padding: 7px 14px; border-radius: var(--radius);
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--border); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--surface-2); border-color: var(--dim); }
+  .btn-primary {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  .btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+
+  .grid {
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color .2s, transform .2s;
+    cursor: pointer;
+  }
+  .card:hover { border-color: var(--dim); }
+
+  .card-head {
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px;
+  }
+  .card-emoji { font-size: 24px; line-height: 1.1; }
+  .card-title {
+    flex: 1; font-size: 18px; font-weight: 600;
+    font-family: 'Charter', Georgia, serif;
+    line-height: 1.3; color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .card-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: var(--radius);
+    font-size: 11px; font-weight: 500;
+    background: var(--green-soft); color: var(--green);
+  }
+  .tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+  .stats {
+    display: flex; gap: 28px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .stat-val { font-size: 22px; font-weight: 600; margin-top: 2px; font-family: 'Charter', Georgia, serif; letter-spacing: -0.02em; }
+  .stat-val.accent { color: var(--accent); }
+
+  .progress-row { margin-bottom: 18px; }
+  .progress-meta {
+    display: flex; justify-content: space-between; font-size: 12px;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  .progress-meta strong { color: var(--amber); font-weight: 600; }
+  .progress-bar {
+    height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--amber); }
+
+  .card-actions { display: flex; gap: 6px; }
+  .card-actions .btn { padding: 6px 14px; font-size: 12px; }
+  .btn-ghost { background: transparent; border-color: transparent; }
+  .btn-ghost:hover { background: var(--surface-2); border-color: var(--border); }
+  .btn-danger-link {
+    background: transparent; border: none; color: var(--red); padding: 6px 10px;
+    font-size: 12px; font-family: inherit; cursor: pointer;
+  }
+  .btn-danger-link:hover { background: #fef2f2; border-radius: var(--radius); }
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    Pulse
+  </div>
+  <div class="nav-item active">Positions</div>
+  <div class="nav-item">JD Library</div>
+  <div class="nav-item">Candidates</div>
+  <div class="nav-item">Analytics</div>
+  <div class="nav-item">HR Brain</div>
+  <div class="nav-item">Settings</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <button class="nav-icon-btn">🔍</button>
+    <button class="nav-icon-btn">🔔 Feed</button>
+    <div class="avatar">PA</div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Open Positions</h1>
+      <div class="page-sub">2 active roles. Last sync 5 hours ago.</div>
+    </div>
+    <div class="actions">
+      <div class="seg">
+        <div class="seg-item on">Active</div>
+        <div class="seg-item">All</div>
+        <div class="seg-item">Closed</div>
+      </div>
+      <button class="btn">Export</button>
+      <button class="btn btn-primary">+ New role</button>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-emoji">🦺</div>
+        <div style="flex:1; min-width:0;">
+          <div class="card-title">Group HSE Manager</div>
+          <div class="card-meta">Health, Safety & Environment · Dubai, UAE</div>
+        </div>
+        <span class="tag">Active</span>
+      </div>
+
+      <div class="stats">
+        <div>
+          <div class="stat-label">CVs</div>
+          <div class="stat-val">60</div>
+        </div>
+        <div>
+          <div class="stat-label">Short</div>
+          <div class="stat-val">0</div>
+        </div>
+        <div>
+          <div class="stat-label">Match</div>
+          <div class="stat-val accent">13.1%</div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-meta"><span>Pipeline progress</span><strong>49% needs attention</strong></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:49%"></div></div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-primary">Open</button>
+        <button class="btn btn-ghost">Archive</button>
+        <button class="btn-danger-link">Delete</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-emoji">🤖</div>
+        <div style="flex:1; min-width:0;">
+          <div class="card-title">AI Software Engineer</div>
+          <div class="card-meta">Engineering · Remote APAC</div>
+        </div>
+        <span class="tag">Active</span>
+      </div>
+
+      <div class="stats">
+        <div>
+          <div class="stat-label">CVs</div>
+          <div class="stat-val">8</div>
+        </div>
+        <div>
+          <div class="stat-label">Short</div>
+          <div class="stat-val">0</div>
+        </div>
+        <div>
+          <div class="stat-label">Match</div>
+          <div class="stat-val accent">37.6%</div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-meta"><span>Pipeline progress</span><strong>51% needs attention</strong></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:51%"></div></div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-primary">Open</button>
+        <button class="btn btn-ghost">Archive</button>
+        <button class="btn-danger-link">Delete</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

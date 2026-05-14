@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PULSE — Shadcn light theme</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f4f4f5;
+    --card: #ffffff;
+    --border: #e4e4e7;
+    --border-soft: #f1f1f4;
+    --ink: #09090b;
+    --ink-soft: #3f3f46;
+    --muted: #71717a;
+    --dim: #a1a1aa;
+    --accent: #18181b;        /* primary CTA = near-black */
+    --accent-ink: #fafafa;
+    --blue: #2563eb;
+    --blue-soft: #eff6ff;
+    --green: #16a34a;
+    --green-soft: #f0fdf4;
+    --orange: #ea580c;
+    --orange-soft: #fff7ed;
+    --red: #dc2626;
+    --red-soft: #fef2f2;
+    --radius: 8px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Geist', 'Inter', -apple-system, system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── NAV ── */
+  .nav {
+    height: 56px; display: flex; align-items: center; gap: 4px;
+    padding: 0 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 600; font-size: 15px; margin-right: 28px;
+    letter-spacing: -0.01em;
+  }
+  .brand-logo {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(135deg, #18181b 0%, #3f3f46 100%);
+    color: #fff;
+    display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  }
+  .nav-item {
+    padding: 7px 12px; border-radius: var(--radius-sm);
+    color: var(--muted); cursor: pointer; font-weight: 500;
+    transition: background .15s, color .15s;
+    font-size: 13.5px;
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--ink); }
+  .nav-item.active { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+  .nav-spacer { flex: 1; }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .cmdk-hint {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 10px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12.5px; color: var(--muted); cursor: pointer;
+    min-width: 200px;
+  }
+  .cmdk-hint:hover { background: var(--surface-2); }
+  .kbd {
+    margin-left: auto;
+    padding: 1px 5px; background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px; font-size: 10.5px;
+    font-family: ui-monospace, 'SF Mono', monospace;
+    color: var(--ink-soft);
+  }
+  .feed-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12.5px; color: var(--ink-soft); cursor: pointer;
+    position: relative;
+    font-weight: 500;
+  }
+  .feed-pill:hover { background: var(--surface-2); }
+  .feed-dot {
+    position: absolute; top: -3px; right: -3px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red); border: 2px solid var(--surface);
+  }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #18181b, #52525b);
+    color: #fff;
+    display: grid; place-items: center; font-size: 11px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ── PAGE ── */
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .page-title {
+    font-size: 24px; font-weight: 600; margin: 0;
+    letter-spacing: -0.02em; color: var(--ink);
+  }
+  .page-sub {
+    font-size: 13.5px; color: var(--muted); margin-top: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sub-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ── tabs / segmented ── */
+  .seg {
+    display: inline-flex; padding: 3px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+  }
+  .seg-item {
+    padding: 5px 12px; border-radius: 5px; font-size: 13px;
+    color: var(--muted); cursor: pointer; font-weight: 500;
+    transition: background .15s, color .15s;
+  }
+  .seg-item.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+  /* ── buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--border);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, border-color .15s;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn-primary {
+    background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #27272a; }
+  .btn-icon { font-size: 13px; line-height: 1; }
+  .btn-ghost { background: transparent; box-shadow: none; }
+  .btn-ghost:hover { background: var(--surface-2); }
+  .btn-sm { padding: 5px 10px; font-size: 12.5px; }
+
+  /* ── cards ── */
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+    cursor: pointer;
+    position: relative;
+  }
+  .card:hover {
+    border-color: var(--dim);
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-head {
+    display: flex; align-items: flex-start; gap: 11px;
+  }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 7px;
+    background: var(--surface-2);
+    display: grid; place-items: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .card-title-wrap { flex: 1; min-width: 0; }
+  .card-title {
+    font-size: 15px; font-weight: 600; line-height: 1.3;
+    color: var(--ink); letter-spacing: -0.01em;
+  }
+  .card-meta {
+    font-size: 12.5px; color: var(--muted); margin-top: 3px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--dim); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11px;
+    font-weight: 500; letter-spacing: 0.01em;
+    background: var(--green-soft); color: var(--green);
+    border: 1px solid #bbf7d0;
+  }
+  .badge::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green);
+  }
+
+  /* ── stats ── */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 14px 0;
+  }
+  .stat { padding: 0 14px; border-right: 1px solid var(--border-soft); }
+  .stat:first-child { padding-left: 0; }
+  .stat:last-child { border-right: none; padding-right: 0; }
+  .stat-label {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  .stat-val {
+    font-size: 22px; font-weight: 600; margin-top: 4px;
+    letter-spacing: -0.02em; line-height: 1.1;
+  }
+  .stat-val.accent-blue { color: var(--blue); }
+
+  /* ── progress ── */
+  .progress-row {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .progress-meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; color: var(--muted);
+  }
+  .progress-meta strong { color: var(--orange); font-weight: 600; }
+  .progress-bar {
+    height: 6px; border-radius: 3px; background: var(--surface-2);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--orange) 0%, #fb923c 100%);
+  }
+
+  .card-foot {
+    display: flex; gap: 6px; margin-top: 2px;
+  }
+  .card-foot .btn { padding: 7px 12px; font-size: 12.5px; }
+  .card-foot .btn:nth-child(1) { flex: 1; justify-content: center; }
+  .btn-danger {
+    color: var(--red); background: transparent; border-color: var(--border);
+    box-shadow: none;
+  }
+  .btn-danger:hover { background: var(--red-soft); border-color: #fecaca; }
+
+  /* small flourish */
+  .empty-row { color: var(--dim); font-size: 12.5px; }
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <span>pulse</span>
+  </div>
+  <div class="nav-item active">Positions</div>
+  <div class="nav-item">JD Repo</div>
+  <div class="nav-item">CV Repo</div>
+  <div class="nav-item">Analytics</div>
+  <div class="nav-item">HR Brain</div>
+  <div class="nav-item">Admin</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <div class="cmdk-hint">
+      <span>🔍</span>
+      <span>Search positions, CVs…</span>
+      <span class="kbd">⌘K</span>
+    </div>
+    <div class="feed-pill">
+      🔔 Feed
+      <span class="feed-dot"></span>
+    </div>
+    <div class="avatar">PA</div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Positions</h1>
+      <div class="page-sub">
+        <span class="sub-dot"></span>
+        2 active <span style="color: var(--dim);">·</span> last sync 2m ago
+      </div>
+    </div>
+    <div class="actions">
+      <div class="seg">
+        <div class="seg-item on">Active</div>
+        <div class="seg-item">All</div>
+        <div class="seg-item">Closed</div>
+      </div>
+      <button class="btn btn-ghost btn-sm"><span class="btn-icon">↓</span> Export CSV</button>
+      <button class="btn btn-primary"><span class="btn-icon">+</span> New Position</button>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- Card 1 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🦺</div>
+        <div class="card-title-wrap">
+          <div class="card-title">Group HSE Manager</div>
+          <div class="card-meta">HSE <span class="meta-dot"></span> Dubai <span class="meta-dot"></span> 5h ago</div>
+        </div>
+        <span class="badge">Active</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">CVs</div>
+          <div class="stat-val">60</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-val">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Match</div>
+          <div class="stat-val accent-blue">13.1%</div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-meta">
+          <span>Pipeline progress</span>
+          <strong>49% needs attention</strong>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:49%"></div></div>
+      </div>
+
+      <div class="card-foot">
+        <button class="btn btn-primary">Open</button>
+        <button class="btn">Archive</button>
+        <button class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🤖</div>
+        <div class="card-title-wrap">
+          <div class="card-title">AI Software Engineer</div>
+          <div class="card-meta">Engineering <span class="meta-dot"></span> Remote APAC <span class="meta-dot"></span> 5h ago</div>
+        </div>
+        <span class="badge">Active</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">CVs</div>
+          <div class="stat-val">8</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-val">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Match</div>
+          <div class="stat-val accent-blue">37.6%</div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-meta">
+          <span>Pipeline progress</span>
+          <strong>51% needs attention</strong>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:51%"></div></div>
+      </div>
+
+      <div class="card-foot">
+        <button class="btn btn-primary">Open</button>
+        <button class="btn">Archive</button>
+        <button class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

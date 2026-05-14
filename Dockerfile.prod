@@ -1,0 +1,95 @@
+# ============================================================================
+# PULSE — Production Dockerfile (AWS ECS Fargate compatible)
+# ============================================================================
+# Multi-arch: linux/amd64 + linux/arm64 (Graviton)
+# Non-root runtime user `pulse` (uid 1000)
+# HEALTHCHECK for ALB / ECS
+# ============================================================================
+
+ARG TARGETARCH
+ARG TARGETOS
+
+# --- Stage 1: Build SvelteKit frontend ---
+FROM --platform=$BUILDPLATFORM node:22-slim AS frontend-builder
+
+WORKDIR /frontend
+
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+# Output: /frontend/build/
+
+# --- Stage 2: Python runtime ---
+FROM python:3.11-slim AS runtime
+
+ARG TARGETARCH
+ARG TARGETOS
+
+LABEL org.opencontainers.image.title="PULSE" \
+      org.opencontainers.image.description="PULSE — Org Heartbeat (FastAPI + SvelteKit)" \
+      org.opencontainers.image.source="https://github.com/your-org/HUB-HR-Agent" \
+      org.opencontainers.image.licenses="Proprietary" \
+      org.opencontainers.image.architecture="${TARGETARCH}" \
+      org.opencontainers.image.os="${TARGETOS}"
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    LOG_FORMAT=json \
+    RUN_MIGRATIONS_ON_BOOT=true \
+    APP_VERSION=1.0.0
+
+# --- System deps (build + runtime: poppler/fonts for PDF, curl for healthcheck) ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc g++ libffi-dev curl postgresql-client \
+        poppler-utils \
+        tesseract-ocr tesseract-ocr-mya tesseract-ocr-eng \
+        libicu-dev pkg-config \
+        fonts-liberation fonts-dejavu-core fonts-noto-core fontconfig \
+        ca-certificates tini \
+    && fc-cache -fv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Non-root user (uid 1000 to align with EFS posix uid mapping) ---
+RUN groupadd --system --gid 1000 pulse \
+ && useradd  --system --uid 1000 --gid 1000 --home-dir /app --shell /usr/sbin/nologin pulse
+
+WORKDIR /app
+
+# --- Python deps (cached layer) ---
+COPY --chown=pulse:pulse backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# --- Application code ---
+COPY --chown=pulse:pulse backend/    ./backend/
+COPY --chown=pulse:pulse instance.yaml ./instance.yaml
+COPY --chown=pulse:pulse db/         ./db/
+COPY --chown=pulse:pulse scripts/    ./scripts/
+
+# --- Frontend static bundle ---
+COPY --from=frontend-builder --chown=pulse:pulse /frontend/build /app/static-frontend
+
+# --- Data directories (chown'd; on ECS with EFS these are mount points) ---
+RUN mkdir -p /data/cvs /data/screenshots /data/exports /data/uploads \
+ && chown -R pulse:pulse /data /app
+
+USER pulse
+
+EXPOSE 8000
+
+# ECS / ALB healthcheck. Will mark task unhealthy if /api/health 5xx for 3 in a row.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD curl -fsS http://localhost:8000/api/health || exit 1
+
+# Tini for clean PID 1 signal handling under Fargate.
+ENTRYPOINT ["/usr/bin/tini", "--", "uvicorn", "backend.main:app", \
+    "--host", "0.0.0.0", \
+    "--port", "8000", \
+    "--workers", "4", \
+    "--proxy-headers", \
+    "--forwarded-allow-ips", "*"]

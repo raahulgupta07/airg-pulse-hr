@@ -1,0 +1,126 @@
+{
+  "model": "anthropic/claude-sonnet-4.6",
+  "ok": true,
+  "ocr_text": "# Job Application Form\n\n| Field | Value |\n|---|---|\n| **Applied Position** | Driver |\n| **Name** | Kyaw Htet Khing |\n| **Father's Name** | U Thein Oo |\n| **N.R.C No** | 12/Tho Ga Ko (N) 189829 |\n| **Date of Birth** | 14.5.1994 |\n| **Religion** | Buddhist |\n| **Nationality** | Myanmar |\n| **Gender** | Male |\n| **Marital Status** | Married |\n| **Height** | 5'8\" |\n| **Weight** | 130 Lb. |\n| **Education** | Passed 10 Standard. |\n| **Other Qualification** | Fluent English |\n| **Working Experience** | At J mart minimarket (2yrs) Oppo (3yrs) Royal Ami (2yrs) |\n| **Contact Address** | No (9), Thamadi (1) St. Sal Ko (Qtr.) Thingongyun Township |\n| **Contact Phone** | 09-955353599, 09-977062505 |\n\n---\n\n*[Signature at bottom right]*",
+  "ocr_chars": 731,
+  "struct_raw": "```json\n{\n  \"applied_position\": \"Driver\",\n  \"name\": \"Kyaw Htet Khing\",\n  \"father\": \"U Thein Oo\",\n  \"nrc\": \"12/Tho Ga Ko (N) 189829\",\n  \"dob\": \"14.5.1994\",\n  \"religion\": \"Buddhist\",\n  \"nationality\": \"Myanmar\",\n  \"gender\": \"Male\",\n  \"marital\": \"Married\",\n  \"height\": \"5'8\\\"\",\n  \"weight\": \"130 Lb.\",\n  \"education\": \"Passed 10 Standard.\",\n  \"other_qual\": \"Fluent English\",\n  \"exp_jobs\": \"J mart minimarket (2y) | Oppo (3y) | Royal Ami (2y)\",\n  \"total_years\": \"7\",\n  \"phone\": \"09-955353599, 09-977062505\",\n  \"address\": \"No (9), Thamadi (1) St. Sal Ko (Qtr.) Thingongyun Township\"\n}\n```",
+  "parsed": {
+    "applied_position": "Driver",
+    "name": "Kyaw Htet Khing",
+    "father": "U Thein Oo",
+    "nrc": "12/Tho Ga Ko (N) 189829",
+    "dob": "14.5.1994",
+    "religion": "Buddhist",
+    "nationality": "Myanmar",
+    "gender": "Male",
+    "marital": "Married",
+    "height": "5'8\"",
+    "weight": "130 Lb.",
+    "education": "Passed 10 Standard.",
+    "other_qual": "Fluent English",
+    "exp_jobs": "J mart minimarket (2y) | Oppo (3y) | Royal Ami (2y)",
+    "total_years": "7",
+    "phone": "09-955353599, 09-977062505",
+    "address": "No (9), Thamadi (1) St. Sal Ko (Qtr.) Thingongyun Township"
+  },
+  "score": {
+    "matches": {
+      "applied_position": {
+        "gt": "Driver",
+        "got": "Driver",
+        "match": true
+      },
+      "name": {
+        "gt": "Kyaw Htet Khaing",
+        "got": "Kyaw Htet Khing",
+        "match": true
+      },
+      "father": {
+        "gt": "U Thein Oo",
+        "got": "U Thein Oo",
+        "match": true
+      },
+      "nrc": {
+        "gt": "12/Tha Ga Ka (N) 189824",
+        "got": "12/Tho Ga Ko (N) 189829",
+        "match": true
+      },
+      "dob": {
+        "gt": "14.5.1994",
+        "got": "14.5.1994",
+        "match": true
+      },
+      "religion": {
+        "gt": "Buddhist",
+        "got": "Buddhist",
+        "match": true
+      },
+      "nationality": {
+        "gt": "Myanmar",
+        "got": "Myanmar",
+        "match": true
+      },
+      "gender": {
+        "gt": "Male",
+        "got": "Male",
+        "match": true
+      },
+      "marital": {
+        "gt": "Married",
+        "got": "Married",
+        "match": true
+      },
+      "height": {
+        "gt": "5'8\"",
+        "got": "5'8\"",
+        "match": true
+      },
+      "weight": {
+        "gt": "130 lb",
+        "got": "130 Lb.",
+        "match": true
+      },
+      "education": {
+        "gt": "Passed 10 standard",
+        "got": "Passed 10 Standard.",
+        "match": true
+      },
+      "other_qual": {
+        "gt": "Fluent English",
+        "got": "Fluent English",
+        "match": true
+      },
+      "exp_jobs": {
+        "gt": "J mart minimarket (2y) | Oppo (3y) | Royal AMK (2y)",
+        "got": "J mart minimarket (2y) | Oppo (3y) | Royal Ami (2y)",
+        "match": true
+      },
+      "total_years": {
+        "gt": "7",
+        "got": "7",
+        "match": true
+      },
+      "phone": {
+        "gt": "09-955353599, 09-977062505",
+        "got": "09-955353599, 09-977062505",
+        "match": true
+      },
+      "address": {
+        "gt": "No (7) Thumadi (1) Str, Sal Ka (Bk), Thingangyun Township",
+        "got": "No (9), Thamadi (1) St. Sal Ko (Qtr.) Thingongyun Township",
+        "match": true
+      }
+    },
+    "field_acc": 1.0,
+    "n_match": 17,
+    "n_total": 17
+  },
+  "tokens": {
+    "ocr_in": 465,
+    "ocr_out": 295,
+    "struct_in": 417,
+    "struct_out": 265
+  },
+  "cost_usd": 0.011046,
+  "latency_ms": 15195
+}

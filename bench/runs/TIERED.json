@@ -1,0 +1,135 @@
+{
+  "ok": true,
+  "final_parsed": {
+    "applied_position": "Driver",
+    "name": "Kyaw Htet Khaing",
+    "father": "U Thein Oo",
+    "nrc": "12/ThaGaKa(N)189824",
+    "dob": "14.05.1994",
+    "religion": "Buddhist",
+    "nationality": "Myanmar",
+    "gender": "Male",
+    "marital": "Married",
+    "height": "5' 8\"",
+    "weight": "130 Lb",
+    "education": "Passed 10 standard",
+    "other_qual": "Fluent English",
+    "exp_jobs": "J mart minimarket (2yrs) | Oppo (3yrs) | Royal AMTI (2yrs)",
+    "total_years": "7",
+    "phone": "09-955353599, 09-977062505",
+    "address": "NO (7) Thamadi (1) Str. Sal Ka (Blt) Thingangyun Township"
+  },
+  "score": {
+    "matches": {
+      "applied_position": {
+        "gt": "Driver",
+        "got": "Driver",
+        "match": true
+      },
+      "name": {
+        "gt": "Kyaw Htet Khaing",
+        "got": "Kyaw Htet Khaing",
+        "match": true
+      },
+      "father": {
+        "gt": "U Thein Oo",
+        "got": "U Thein Oo",
+        "match": true
+      },
+      "nrc": {
+        "gt": "12/Tha Ga Ka (N) 189824",
+        "got": "12/ThaGaKa(N)189824",
+        "match": true
+      },
+      "dob": {
+        "gt": "14.5.1994",
+        "got": "14.05.1994",
+        "match": true
+      },
+      "religion": {
+        "gt": "Buddhist",
+        "got": "Buddhist",
+        "match": true
+      },
+      "nationality": {
+        "gt": "Myanmar",
+        "got": "Myanmar",
+        "match": true
+      },
+      "gender": {
+        "gt": "Male",
+        "got": "Male",
+        "match": true
+      },
+      "marital": {
+        "gt": "Married",
+        "got": "Married",
+        "match": true
+      },
+      "height": {
+        "gt": "5'8\"",
+        "got": "5' 8\"",
+        "match": true
+      },
+      "weight": {
+        "gt": "130 lb",
+        "got": "130 Lb",
+        "match": true
+      },
+      "education": {
+        "gt": "Passed 10 standard",
+        "got": "Passed 10 standard",
+        "match": true
+      },
+      "other_qual": {
+        "gt": "Fluent English",
+        "got": "Fluent English",
+        "match": true
+      },
+      "exp_jobs": {
+        "gt": "J mart minimarket (2y) | Oppo (3y) | Royal AMK (2y)",
+        "got": "J mart minimarket (2yrs) | Oppo (3yrs) | Royal AMTI (2yrs)",
+        "match": true
+      },
+      "total_years": {
+        "gt": "7",
+        "got": "7",
+        "match": true
+      },
+      "phone": {
+        "gt": "09-955353599, 09-977062505",
+        "got": "09-955353599, 09-977062505",
+        "match": true
+      },
+      "address": {
+        "gt": "No (7) Thumadi (1) Str, Sal Ka (Bk), Thingangyun Township",
+        "got": "NO (7) Thamadi (1) Str. Sal Ka (Blt) Thingangyun Township",
+        "match": true
+      }
+    },
+    "field_acc": 1.0,
+    "n_match": 17,
+    "n_total": 17
+  },
+  "critical_exact": "2/3",
+  "trace": {
+    "tiers": [
+      {
+        "tier": 2,
+        "model": "google/gemini-3-flash-preview",
+        "cost": 0.0015986,
+        "latency_ms": 6403.954029083252
+      },
+      {
+        "tier": "verify",
+        "model": "anthropic/claude-opus-4.7",
+        "cost": 0.01383,
+        "latency_ms": 3044.962167739868
+      }
+    ],
+    "total_cost": 0.0154286,
+    "total_latency_ms": 9448.91619682312
+  },
+  "total_cost_usd": 0.015429,
+  "total_latency_ms": 9449
+}

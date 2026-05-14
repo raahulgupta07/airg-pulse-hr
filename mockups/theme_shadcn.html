@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PULSE — Shadcn / Raycast theme</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #09090b;
+    --surface: #0f0f12;
+    --card: #131318;
+    --border: #27272a;
+    --border-soft: #1f1f24;
+    --ink: #fafafa;
+    --muted: #a1a1aa;
+    --dim: #71717a;
+    --accent: #60a5fa;
+    --accent-soft: rgba(96,165,250,0.12);
+    --green: #22c55e;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --radius: 8px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Geist', 'Inter', -apple-system, system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .nav {
+    height: 52px; display: flex; align-items: center; gap: 4px;
+    padding: 0 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 15px; margin-right: 24px;
+  }
+  .brand-logo {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    display: grid; place-items: center; font-size: 13px;
+  }
+  .nav-item {
+    padding: 6px 12px; border-radius: var(--radius-sm);
+    color: var(--muted); cursor: pointer; font-weight: 500;
+    transition: background .15s;
+  }
+  .nav-item:hover { background: var(--card); color: var(--ink); }
+  .nav-item.active { background: var(--card); color: var(--ink); }
+  .nav-spacer { flex: 1; }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .feed-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; background: var(--card); color: var(--muted);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px; cursor: pointer;
+  }
+  .feed-pill:hover { color: var(--ink); border-color: var(--dim); }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 11px; font-weight: 600;
+    color: var(--muted);
+  }
+
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .filter-tabs {
+    display: inline-flex; padding: 3px; background: var(--card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-right: 8px;
+  }
+  .filter-tab {
+    padding: 4px 10px; border-radius: 4px; font-size: 12px;
+    color: var(--muted); cursor: pointer;
+  }
+  .filter-tab.on { background: var(--surface); color: var(--ink); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: var(--radius-sm);
+    background: var(--card); color: var(--ink);
+    border: 1px solid var(--border); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: #1c1c20; }
+  .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn-primary:hover { background: #e4e4e7; }
+  .btn-icon { font-size: 13px; }
+
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: var(--radius); padding: 18px;
+    transition: border-color .15s, transform .15s;
+    cursor: pointer;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .card:hover { border-color: var(--dim); }
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--accent-soft); display: grid; place-items: center;
+    font-size: 16px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 600; line-height: 1.3;
+    flex: 1; min-width: 0;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px; font-size: 11px;
+    background: rgba(34,197,94,0.12); color: var(--green);
+    font-weight: 500;
+  }
+  .badge::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green);
+  }
+  .meta {
+    font-size: 12px; color: var(--muted);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--dim); }
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    padding: 12px 0; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft);
+  }
+  .stat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-val { font-size: 18px; font-weight: 600; margin-top: 2px; letter-spacing: -0.02em; }
+  .stat-val.accent { color: var(--accent); }
+
+  .progress-row {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .progress-meta {
+    display: flex; justify-content: space-between; font-size: 11px; color: var(--muted);
+  }
+  .progress-meta strong { color: var(--orange); font-weight: 500; }
+  .progress-bar {
+    height: 4px; border-radius: 2px; background: var(--border);
+    overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), #fbbf24); }
+
+  .card-actions { display: flex; gap: 6px; margin-top: 2px; }
+  .card-actions .btn { padding: 6px 12px; font-size: 12px; flex: 1; justify-content: center; }
+  .btn-ghost {
+    background: transparent; border-color: var(--border);
+  }
+  .btn-danger {
+    background: transparent; color: var(--red); border-color: var(--border);
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.1); border-color: var(--red); }
+
+  /* command bar */
+  .cmdk-hint {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; background: var(--card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--muted);
+  }
+  .kbd {
+    padding: 1px 5px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; font-size: 10px; font-family: ui-monospace, monospace;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <span>pulse</span>
+  </div>
+  <div class="nav-item active">Positions</div>
+  <div class="nav-item">JD Repo</div>
+  <div class="nav-item">CV Repo</div>
+  <div class="nav-item">Analytics</div>
+  <div class="nav-item">HR Brain</div>
+  <div class="nav-item">Admin</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <div class="cmdk-hint">Search <span class="kbd">⌘K</span></div>
+    <div class="feed-pill">🔔 Feed</div>
+    <div class="avatar">PA</div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Positions</h1>
+      <div class="page-sub">2 active · last sync 2 min ago</div>
+    </div>
+    <div class="actions">
+      <div class="filter-tabs">
+        <div class="filter-tab on">Active</div>
+        <div class="filter-tab">All</div>
+        <div class="filter-tab">Closed</div>
+      </div>
+      <button class="btn"><span class="btn-icon">↓</span> Export</button>
+      <button class="btn btn-primary"><span class="btn-icon">+</span> New Position</button>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- Card 1 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🦺</div>
+        <div class="card-title">Group HSE Manager</div>
+        <span class="badge">Active</span>
+      </div>
+      <div class="meta">HSE <span class="meta-dot"></span> Dubai <span class="meta-dot"></span> 5h ago</div>
+      <div class="stats">
+        <div>
+          <div class="stat-label">CVs</div>
+          <div class="stat-val">60</div>
+        </div>
+        <div>
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-val">0</div>
+        </div>
+        <div>
+          <div class="stat-label">Match</div>
+          <div class="stat-val accent">13.1%</div>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-meta"><span>Pipeline progress</span><strong>49% needs attention</strong></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:49%"></div></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-primary">Open</button>
+        <button class="btn btn-ghost">Archive</button>
+        <button class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">AI Software Engineer</div>
+        <span class="badge">Active</span>
+      </div>
+      <div class="meta">Engineering <span class="meta-dot"></span> Remote APAC <span class="meta-dot"></span> 5h ago</div>
+      <div class="stats">
+        <div>
+          <div class="stat-label">CVs</div>
+          <div class="stat-val">8</div>
+        </div>
+        <div>
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-val">0</div>
+        </div>
+        <div>
+          <div class="stat-label">Match</div>
+          <div class="stat-val accent">37.6%</div>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-meta"><span>Pipeline progress</span><strong>51% needs attention</strong></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:51%"></div></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-primary">Open</button>
+        <button class="btn btn-ghost">Archive</button>
+        <button class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

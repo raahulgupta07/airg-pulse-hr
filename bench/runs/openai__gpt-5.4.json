@@ -1,0 +1,126 @@
+{
+  "model": "openai/gpt-5.4",
+  "ok": true,
+  "ocr_text": "```markdown\n**Applied Position** : Driver\n\n**Name** : Kyaw Htet Khaing\n\n**Father's Name** : U Thein Oo\n\n**N.R.C No** : 12/Tha Sa Ka (N) 189829\n\n**Date of Birth** : 14.5.1954\n\n**Religion** : Buddhist\n\n**Nationality** : Myanmar\n\n**Gender** : Male\n\n**Marital Status** : Married\n\n**Height** : 5' 8\"\n\n**Weight** : 130 lb\n\n**Education** : Passed 10 standard.\n\n**Other Qualification** : Hunerd English\n\n**Working Experience** : At J mart minimarket. (2 yrs)  \nOppo (4yrs). Royal NPTS (2yrs)\n\n**Contact Address** : No 97, Thantsi (?) St. Sol Ki (or?)  \nThingongyun Township.\n\n**Contact Phooe** : 09 - 555355596, 09 - 977062505\n```\n\n**Handwritten signature at bottom right:**  \n```markdown\nKyaw Htet\n```",
+  "ocr_chars": 694,
+  "struct_raw": "{\"applied_position\":\"Driver\",\"name\":\"Kyaw Htet Khaing\",\"father\":\"U Thein Oo\",\"nrc\":\"12/Tha Sa Ka (N) 189829\",\"dob\":\"14.5.1954\",\"religion\":\"Buddhist\",\"nationality\":\"Myanmar\",\"gender\":\"Male\",\"marital\":\"Married\",\"height\":\"5' 8\\\"\",\"weight\":\"130 lb\",\"education\":\"Passed 10 standard.\",\"other_qual\":\"Hunerd English\",\"exp_jobs\":\"J mart minimarket (2y)|Oppo (4y)|Royal NPTS (2y)\",\"total_years\":\"8\",\"phone\":\"09 - 555355596, 09 - 977062505\",\"address\":\"No 97, Thantsi (?) St. Sol Ki (or?), Thingongyun Township.\"}",
+  "parsed": {
+    "applied_position": "Driver",
+    "name": "Kyaw Htet Khaing",
+    "father": "U Thein Oo",
+    "nrc": "12/Tha Sa Ka (N) 189829",
+    "dob": "14.5.1954",
+    "religion": "Buddhist",
+    "nationality": "Myanmar",
+    "gender": "Male",
+    "marital": "Married",
+    "height": "5' 8\"",
+    "weight": "130 lb",
+    "education": "Passed 10 standard.",
+    "other_qual": "Hunerd English",
+    "exp_jobs": "J mart minimarket (2y)|Oppo (4y)|Royal NPTS (2y)",
+    "total_years": "8",
+    "phone": "09 - 555355596, 09 - 977062505",
+    "address": "No 97, Thantsi (?) St. Sol Ki (or?), Thingongyun Township."
+  },
+  "score": {
+    "matches": {
+      "applied_position": {
+        "gt": "Driver",
+        "got": "Driver",
+        "match": true
+      },
+      "name": {
+        "gt": "Kyaw Htet Khaing",
+        "got": "Kyaw Htet Khaing",
+        "match": true
+      },
+      "father": {
+        "gt": "U Thein Oo",
+        "got": "U Thein Oo",
+        "match": true
+      },
+      "nrc": {
+        "gt": "12/Tha Ga Ka (N) 189824",
+        "got": "12/Tha Sa Ka (N) 189829",
+        "match": true
+      },
+      "dob": {
+        "gt": "14.5.1994",
+        "got": "14.5.1954",
+        "match": true
+      },
+      "religion": {
+        "gt": "Buddhist",
+        "got": "Buddhist",
+        "match": true
+      },
+      "nationality": {
+        "gt": "Myanmar",
+        "got": "Myanmar",
+        "match": true
+      },
+      "gender": {
+        "gt": "Male",
+        "got": "Male",
+        "match": true
+      },
+      "marital": {
+        "gt": "Married",
+        "got": "Married",
+        "match": true
+      },
+      "height": {
+        "gt": "5'8\"",
+        "got": "5' 8\"",
+        "match": true
+      },
+      "weight": {
+        "gt": "130 lb",
+        "got": "130 lb",
+        "match": true
+      },
+      "education": {
+        "gt": "Passed 10 standard",
+        "got": "Passed 10 standard.",
+        "match": true
+      },
+      "other_qual": {
+        "gt": "Fluent English",
+        "got": "Hunerd English",
+        "match": false
+      },
+      "exp_jobs": {
+        "gt": "J mart minimarket (2y) | Oppo (3y) | Royal AMK (2y)",
+        "got": "J mart minimarket (2y)|Oppo (4y)|Royal NPTS (2y)",
+        "match": true
+      },
+      "total_years": {
+        "gt": "7",
+        "got": "8",
+        "match": false
+      },
+      "phone": {
+        "gt": "09-955353599, 09-977062505",
+        "got": "09 - 555355596, 09 - 977062505",
+        "match": true
+      },
+      "address": {
+        "gt": "No (7) Thumadi (1) Str, Sal Ka (Bk), Thingangyun Township",
+        "got": "No 97, Thantsi (?) St. Sol Ki (or?), Thingongyun Township.",
+        "match": false
+      }
+    },
+    "field_acc": 0.8235294117647058,
+    "n_match": 14,
+    "n_total": 17
+  },
+  "tokens": {
+    "ocr_in": 447,
+    "ocr_out": 230,
+    "struct_in": 336,
+    "struct_out": 172
+  },
+  "cost_usd": 0.004999,
+  "latency_ms": 8160
+}

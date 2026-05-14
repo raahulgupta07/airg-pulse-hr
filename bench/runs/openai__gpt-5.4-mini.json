@@ -1,0 +1,126 @@
+{
+  "model": "openai/gpt-5.4-mini",
+  "ok": true,
+  "ocr_text": "```markdown\nApplied Position : Driver\n\nName : Kyaw Htet Khwing\n\nFather's Name : U Thein Oo\n\nN.R.C No : 12/Tho Ga Kb (A) 189824\n\nDate of Birth : 14.5.1994\n\nReligion : Buddhist\n\nNationality : Myanmar\n\nGender : Mule\n\nMarital Status : Married\n\nHeight : 5'8\"\n\nWeight : 130 lb\n\nEducation : Passed 10 standard\n\nOther Qualification : Thured English\n\nWorking Experience :\nAt. 3 mart mini market (2yrs)\nOppo (3yrs) Royal Airs (2yrs)\n\nContact Address :\nNo 91 Thamdi (1) Bt. Sal K (Ht)\nThingongyan Township\n\nContact Phone : 09-955358591, 09-977062505\n```",
+  "ocr_chars": 542,
+  "struct_raw": "{\"applied_position\":\"Driver\",\"name\":\"Kyaw Htet Khwing\",\"father\":\"U Thein Oo\",\"nrc\":\"12/Tho Ga Kb (A) 189824\",\"dob\":\"14.5.1994\",\"religion\":\"Buddhist\",\"nationality\":\"Myanmar\",\"gender\":\"Mule\",\"marital\":\"Married\",\"height\":\"5'8\\\"\",\"weight\":\"130 lb\",\"education\":\"Passed 10 standard\",\"other_qual\":\"Thured English\",\"exp_jobs\":\"3 mart mini market (2yrs)|Oppo (3yrs)|Royal Airs (2yrs)\",\"total_years\":\"7\",\"phone\":\"09-955358591,09-977062505\",\"address\":\"No 91 Thamdi (1) Bt. Sal K (Ht) Thingongyan Township\"}",
+  "parsed": {
+    "applied_position": "Driver",
+    "name": "Kyaw Htet Khwing",
+    "father": "U Thein Oo",
+    "nrc": "12/Tho Ga Kb (A) 189824",
+    "dob": "14.5.1994",
+    "religion": "Buddhist",
+    "nationality": "Myanmar",
+    "gender": "Mule",
+    "marital": "Married",
+    "height": "5'8\"",
+    "weight": "130 lb",
+    "education": "Passed 10 standard",
+    "other_qual": "Thured English",
+    "exp_jobs": "3 mart mini market (2yrs)|Oppo (3yrs)|Royal Airs (2yrs)",
+    "total_years": "7",
+    "phone": "09-955358591,09-977062505",
+    "address": "No 91 Thamdi (1) Bt. Sal K (Ht) Thingongyan Township"
+  },
+  "score": {
+    "matches": {
+      "applied_position": {
+        "gt": "Driver",
+        "got": "Driver",
+        "match": true
+      },
+      "name": {
+        "gt": "Kyaw Htet Khaing",
+        "got": "Kyaw Htet Khwing",
+        "match": true
+      },
+      "father": {
+        "gt": "U Thein Oo",
+        "got": "U Thein Oo",
+        "match": true
+      },
+      "nrc": {
+        "gt": "12/Tha Ga Ka (N) 189824",
+        "got": "12/Tho Ga Kb (A) 189824",
+        "match": true
+      },
+      "dob": {
+        "gt": "14.5.1994",
+        "got": "14.5.1994",
+        "match": true
+      },
+      "religion": {
+        "gt": "Buddhist",
+        "got": "Buddhist",
+        "match": true
+      },
+      "nationality": {
+        "gt": "Myanmar",
+        "got": "Myanmar",
+        "match": true
+      },
+      "gender": {
+        "gt": "Male",
+        "got": "Mule",
+        "match": false
+      },
+      "marital": {
+        "gt": "Married",
+        "got": "Married",
+        "match": true
+      },
+      "height": {
+        "gt": "5'8\"",
+        "got": "5'8\"",
+        "match": true
+      },
+      "weight": {
+        "gt": "130 lb",
+        "got": "130 lb",
+        "match": true
+      },
+      "education": {
+        "gt": "Passed 10 standard",
+        "got": "Passed 10 standard",
+        "match": true
+      },
+      "other_qual": {
+        "gt": "Fluent English",
+        "got": "Thured English",
+        "match": false
+      },
+      "exp_jobs": {
+        "gt": "J mart minimarket (2y) | Oppo (3y) | Royal AMK (2y)",
+        "got": "3 mart mini market (2yrs)|Oppo (3yrs)|Royal Airs (2yrs)",
+        "match": true
+      },
+      "total_years": {
+        "gt": "7",
+        "got": "7",
+        "match": true
+      },
+      "phone": {
+        "gt": "09-955353599, 09-977062505",
+        "got": "09-955358591,09-977062505",
+        "match": true
+      },
+      "address": {
+        "gt": "No (7) Thumadi (1) Str, Sal Ka (Bk), Thingangyun Township",
+        "got": "No 91 Thamdi (1) Bt. Sal K (Ht) Thingongyan Township",
+        "match": false
+      }
+    },
+    "field_acc": 0.8235294117647058,
+    "n_match": 14,
+    "n_total": 17
+  },
+  "tokens": {
+    "ocr_in": 447,
+    "ocr_out": 176,
+    "struct_in": 282,
+    "struct_out": 170
+  },
+  "cost_usd": 0.000317,
+  "latency_ms": 4095
+}

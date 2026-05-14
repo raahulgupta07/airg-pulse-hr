@@ -1,0 +1,81 @@
+name: Migration Lint
+
+on:
+  pull_request:
+    paths:
+      - 'db/migrations/**'
+
+jobs:
+  lint:
+    name: Forbid destructive migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for override label
+        id: label
+        run: |
+          labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          echo "labels=$labels"
+          if echo "$labels" | grep -q 'allow-destructive-migration'; then
+            echo "override=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::PR carries 'allow-destructive-migration' label — destructive migration lint will be skipped. Ensure a data-migration plan is documented (see UPGRADE.md §4)."
+          else
+            echo "override=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lint db/migrations/*.sql for forbidden patterns
+        if: steps.label.outputs.override != 'true'
+        run: |
+          set -u
+          fail=0
+          shopt -s nullglob
+          files=(db/migrations/*.sql)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No migration files found — nothing to lint."
+            exit 0
+          fi
+
+          # Patterns that are flat-out forbidden.
+          # NOTE: DROP TABLE is special — `DROP TABLE IF EXISTS foo;` followed by
+          # a `CREATE TABLE foo` in the same file is a legit idempotent re-create
+          # pattern in some codebases, so we allow it.
+          forbidden=(
+            'RENAME COLUMN'
+            'ALTER COLUMN .* TYPE'
+            'TRUNCATE'
+            'DROP COLUMN'
+          )
+
+          for f in "${files[@]}"; do
+            for pat in "${forbidden[@]}"; do
+              if grep -iEn "$pat" "$f" >/dev/null; then
+                echo "::error file=$f::Forbidden destructive pattern '$pat' found in $f. See UPGRADE.md §1 (Golden Rules). Apply label 'allow-destructive-migration' only with a documented data-migration plan."
+                grep -iEn "$pat" "$f" | sed "s|^|$f: |"
+                fail=1
+              fi
+            done
+
+            # DROP TABLE special-case: allow if followed by CREATE TABLE of
+            # same form in same file (idempotent re-create).
+            if grep -iEn 'DROP TABLE' "$f" >/dev/null; then
+              if grep -iEn 'DROP TABLE[[:space:]]+IF EXISTS' "$f" >/dev/null \
+                 && grep -iEn 'CREATE TABLE' "$f" >/dev/null; then
+                echo "::notice file=$f::DROP TABLE IF EXISTS + CREATE TABLE present — treated as idempotent re-create."
+              else
+                echo "::error file=$f::Forbidden DROP TABLE in $f. See UPGRADE.md §1."
+                grep -iEn 'DROP TABLE' "$f" | sed "s|^|$f: |"
+                fail=1
+              fi
+            fi
+          done
+
+          if [ $fail -ne 0 ]; then
+            echo ""
+            echo "Migration lint FAILED."
+            echo "See UPGRADE.md §1 (Golden Rules) and §6 (Pre-merge Checklist)."
+            echo "https://github.com/${{ github.repository }}/blob/main/UPGRADE.md"
+            exit 1
+          fi
+          echo "All migrations are additive. OK."

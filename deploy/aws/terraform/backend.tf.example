@@ -1,0 +1,10 @@
+# Rename to backend.tf and fill in your bucket / dynamodb table.
+# terraform {
+#   backend "s3" {
+#     bucket         = "YOUR-TFSTATE-BUCKET"
+#     key            = "hub-hr-agent/prod/terraform.tfstate"
+#     region         = "us-east-1"
+#     dynamodb_table = "YOUR-TFSTATE-LOCK-TABLE"
+#     encrypt        = true
+#   }
+# }

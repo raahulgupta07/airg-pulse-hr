@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PULSE — Workday / Greenhouse theme</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --surface: #ffffff;
+    --nav-bg: #1f2d5c;
+    --nav-ink: #ffffff;
+    --nav-muted: #b9c2db;
+    --ink: #1a2138;
+    --ink-soft: #4a5278;
+    --muted: #6c7494;
+    --border: #e1e6ef;
+    --border-strong: #c9d0de;
+    --accent: #1f2d5c;
+    --accent-2: #2563eb;
+    --green: #15803d;
+    --green-bg: #dcfce7;
+    --orange: #c2410c;
+    --orange-bg: #ffedd5;
+    --red: #b91c1c;
+    --red-bg: #fee2e2;
+    --amber-bar: #f59e0b;
+    --radius: 4px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .nav {
+    height: 56px; display: flex; align-items: center;
+    background: var(--nav-bg); color: var(--nav-ink);
+    padding: 0 24px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 17px; margin-right: 32px;
+    letter-spacing: 0.02em;
+  }
+  .brand-logo {
+    width: 28px; height: 28px; border-radius: 4px;
+    background: #fff; color: var(--nav-bg);
+    display: grid; place-items: center; font-weight: 800; font-size: 13px;
+  }
+  .nav-items { display: flex; gap: 4px; }
+  .nav-item {
+    padding: 18px 14px; color: var(--nav-muted);
+    cursor: pointer; font-weight: 500; font-size: 13px;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+  }
+  .nav-item:hover { color: #fff; }
+  .nav-item.active {
+    color: #fff; border-bottom-color: #2563eb;
+  }
+  .nav-spacer { flex: 1; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-icon { color: var(--nav-muted); cursor: pointer; font-size: 16px; }
+  .nav-icon:hover { color: #fff; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #2563eb; color: #fff;
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  .breadcrumb {
+    background: var(--surface); padding: 10px 32px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+  }
+  .breadcrumb a { color: var(--accent-2); text-decoration: none; }
+  .breadcrumb .sep { margin: 0 8px; color: var(--border-strong); }
+
+  .page {
+    max-width: 1320px; margin: 0 auto; padding: 24px 32px;
+  }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .page-title {
+    font-size: 26px; font-weight: 700; margin: 0; color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .seg {
+    display: inline-flex; background: var(--surface);
+    border: 1px solid var(--border-strong); border-radius: var(--radius);
+  }
+  .seg-item {
+    padding: 7px 14px; font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); cursor: pointer;
+    border-right: 1px solid var(--border-strong);
+  }
+  .seg-item:last-child { border-right: none; }
+  .seg-item.on { background: #eef2ff; color: var(--accent-2); font-weight: 600; }
+
+  .btn {
+    padding: 8px 14px; border-radius: var(--radius);
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--border-strong); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: #f8fafc; border-color: #94a3b8; }
+  .btn-primary {
+    background: var(--accent-2); color: #fff; border-color: var(--accent-2);
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    transition: box-shadow .15s, border-color .15s;
+  }
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(15,23,42,0.08);
+    border-color: var(--border-strong);
+  }
+  .card-head {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    background: #fafbfd;
+  }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 4px;
+    background: #eef2ff; color: var(--accent-2);
+    display: grid; place-items: center; font-size: 16px;
+  }
+  .card-title {
+    flex: 1; font-size: 15px; font-weight: 600; color: var(--ink);
+    line-height: 1.3;
+  }
+  .card-title-sub {
+    font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 400;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.02em;
+  }
+  .pill-active { background: var(--green-bg); color: var(--green); }
+  .pill-active::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .card-body { padding: 18px; }
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin-bottom: 16px;
+  }
+  .stat { background: #f8fafc; padding: 10px 12px; border-radius: var(--radius); }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .stat-val { font-size: 20px; font-weight: 700; color: var(--ink); margin-top: 2px; letter-spacing: -0.02em; }
+  .stat-val.accent { color: var(--accent-2); }
+
+  .progress-row { margin-bottom: 4px; }
+  .progress-meta {
+    display: flex; justify-content: space-between; font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .progress-meta strong { color: var(--orange); font-weight: 600; }
+  .progress-bar {
+    height: 6px; border-radius: 3px; background: var(--border); overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--amber-bar); }
+
+  .card-foot {
+    display: flex; gap: 8px; padding: 12px 18px;
+    background: #fafbfd; border-top: 1px solid var(--border);
+  }
+  .card-foot .btn { flex: 1; justify-content: center; padding: 7px 10px; }
+  .card-foot .btn-primary { flex: 1.4; }
+  .btn-link { background: transparent; border: none; color: var(--accent-2); padding: 7px 10px; }
+  .btn-link:hover { background: #eef2ff; }
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    PULSE
+  </div>
+  <div class="nav-items">
+    <div class="nav-item active">Positions</div>
+    <div class="nav-item">JD Library</div>
+    <div class="nav-item">Candidates</div>
+    <div class="nav-item">Analytics</div>
+    <div class="nav-item">HR Brain</div>
+    <div class="nav-item">Admin</div>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <span class="nav-icon">🔍</span>
+    <span class="nav-icon">🔔</span>
+    <div class="avatar">PA</div>
+  </div>
+</nav>
+
+<div class="breadcrumb">
+  <a href="#">Home</a> <span class="sep">›</span> <a href="#">Recruiting</a> <span class="sep">›</span> Positions
+</div>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Positions</h1>
+      <div class="page-sub">2 active positions · last updated 5 hours ago</div>
+    </div>
+    <div class="actions">
+      <div class="seg">
+        <div class="seg-item on">Active</div>
+        <div class="seg-item">All</div>
+        <div class="seg-item">Closed</div>
+      </div>
+      <button class="btn">📊 Export CSV</button>
+      <button class="btn btn-primary">+ New Position</button>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🦺</div>
+        <div>
+          <div class="card-title">Group HSE Manager</div>
+          <div class="card-title-sub">HSE · Dubai</div>
+        </div>
+        <span class="pill pill-active" style="margin-left:auto;">Active</span>
+      </div>
+      <div class="card-body">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">CVs Received</div>
+            <div class="stat-val">60</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Shortlisted</div>
+            <div class="stat-val">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Match Score</div>
+            <div class="stat-val accent">13.1%</div>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-meta"><span>Pipeline progress</span><strong>49% needs attention</strong></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:49%"></div></div>
+        </div>
+      </div>
+      <div class="card-foot">
+        <button class="btn btn-primary">Open Position</button>
+        <button class="btn">Archive</button>
+        <button class="btn btn-link">Delete</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🤖</div>
+        <div>
+          <div class="card-title">AI Software Engineer</div>
+          <div class="card-title-sub">Engineering · Remote APAC</div>
+        </div>
+        <span class="pill pill-active" style="margin-left:auto;">Active</span>
+      </div>
+      <div class="card-body">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">CVs Received</div>
+            <div class="stat-val">8</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Shortlisted</div>
+            <div class="stat-val">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Match Score</div>
+            <div class="stat-val accent">37.6%</div>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-meta"><span>Pipeline progress</span><strong>51% needs attention</strong></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:51%"></div></div>
+        </div>
+      </div>
+      <div class="card-foot">
+        <button class="btn btn-primary">Open Position</button>
+        <button class="btn">Archive</button>
+        <button class="btn btn-link">Delete</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

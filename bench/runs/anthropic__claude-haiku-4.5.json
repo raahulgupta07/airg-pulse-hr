@@ -1,0 +1,126 @@
+{
+  "model": "anthropic/claude-haiku-4.5",
+  "ok": true,
+  "ocr_text": "# Application Form\n\n**Applied Position** : Driver\n\n**Name** : Kyaw Htet Khuing\n\n**Father's Name** : U Thein Co.\n\n**N.R.C No** : 12/Tha Ga Ks (a) 189624\n\n**Date of Birth** : 14.5.1994\n\n**Religion** : Buddhist\n\n**Nationality** : Myanmar\n\n**Gender** : Male\n\n**Marital Status** : Married\n\n**Height** : 5'8\"\n\n**Weight** : 130 Lb.\n\n**Education** : Based to Standard\n\n**Other Qualification** : Fluent English\n\n**Working Experience** : At 3 mart mini market (3yrs)\nOppo (3yrs) Road Avon (3yrs)\n\n**Contact Address** : Aio (1) Thuandi (3) St. Sal Ks (Bth)\nThingaryian Township\n\n**Contact Phone** : 09-955353911, 09-511062505\n\n---\n\n*[Signature present at bottom]*",
+  "ocr_chars": 652,
+  "struct_raw": "```json\n{\n  \"applied_position\": \"Driver\",\n  \"name\": \"Kyaw Htet Khuing\",\n  \"father\": \"U Thein Co.\",\n  \"nrc\": \"12/Tha Ga Ks (a) 189624\",\n  \"dob\": \"14.5.1994\",\n  \"religion\": \"Buddhist\",\n  \"nationality\": \"Myanmar\",\n  \"gender\": \"Male\",\n  \"marital\": \"Married\",\n  \"height\": \"5'8\\\"\",\n  \"weight\": \"130 Lb.\",\n  \"education\": \"Based to Standard\",\n  \"other_qual\": \"Fluent English\",\n  \"exp_jobs\": \"3 mart mini market (3y) | Oppo (3y) | Road Avon (3y)\",\n  \"total_years\": \"9\",\n  \"phone\": \"09-955353911, 09-511062505\",\n  \"address\": \"Aio (1) Thuandi (3) St. Sal Ks (Bth) Thingaryian Township\"\n}\n```",
+  "parsed": {
+    "applied_position": "Driver",
+    "name": "Kyaw Htet Khuing",
+    "father": "U Thein Co.",
+    "nrc": "12/Tha Ga Ks (a) 189624",
+    "dob": "14.5.1994",
+    "religion": "Buddhist",
+    "nationality": "Myanmar",
+    "gender": "Male",
+    "marital": "Married",
+    "height": "5'8\"",
+    "weight": "130 Lb.",
+    "education": "Based to Standard",
+    "other_qual": "Fluent English",
+    "exp_jobs": "3 mart mini market (3y) | Oppo (3y) | Road Avon (3y)",
+    "total_years": "9",
+    "phone": "09-955353911, 09-511062505",
+    "address": "Aio (1) Thuandi (3) St. Sal Ks (Bth) Thingaryian Township"
+  },
+  "score": {
+    "matches": {
+      "applied_position": {
+        "gt": "Driver",
+        "got": "Driver",
+        "match": true
+      },
+      "name": {
+        "gt": "Kyaw Htet Khaing",
+        "got": "Kyaw Htet Khuing",
+        "match": true
+      },
+      "father": {
+        "gt": "U Thein Oo",
+        "got": "U Thein Co.",
+        "match": true
+      },
+      "nrc": {
+        "gt": "12/Tha Ga Ka (N) 189824",
+        "got": "12/Tha Ga Ks (a) 189624",
+        "match": true
+      },
+      "dob": {
+        "gt": "14.5.1994",
+        "got": "14.5.1994",
+        "match": true
+      },
+      "religion": {
+        "gt": "Buddhist",
+        "got": "Buddhist",
+        "match": true
+      },
+      "nationality": {
+        "gt": "Myanmar",
+        "got": "Myanmar",
+        "match": true
+      },
+      "gender": {
+        "gt": "Male",
+        "got": "Male",
+        "match": true
+      },
+      "marital": {
+        "gt": "Married",
+        "got": "Married",
+        "match": true
+      },
+      "height": {
+        "gt": "5'8\"",
+        "got": "5'8\"",
+        "match": true
+      },
+      "weight": {
+        "gt": "130 lb",
+        "got": "130 Lb.",
+        "match": true
+      },
+      "education": {
+        "gt": "Passed 10 standard",
+        "got": "Based to Standard",
+        "match": true
+      },
+      "other_qual": {
+        "gt": "Fluent English",
+        "got": "Fluent English",
+        "match": true
+      },
+      "exp_jobs": {
+        "gt": "J mart minimarket (2y) | Oppo (3y) | Royal AMK (2y)",
+        "got": "3 mart mini market (3y) | Oppo (3y) | Road Avon (3y)",
+        "match": true
+      },
+      "total_years": {
+        "gt": "7",
+        "got": "9",
+        "match": false
+      },
+      "phone": {
+        "gt": "09-955353599, 09-977062505",
+        "got": "09-955353911, 09-511062505",
+        "match": true
+      },
+      "address": {
+        "gt": "No (7) Thumadi (1) Str, Sal Ka (Bk), Thingangyun Township",
+        "got": "Aio (1) Thuandi (3) St. Sal Ks (Bth) Thingaryian Township",
+        "match": false
+      }
+    },
+    "field_acc": 0.8823529411764706,
+    "n_match": 15,
+    "n_total": 17
+  },
+  "tokens": {
+    "ocr_in": 465,
+    "ocr_out": 253,
+    "struct_in": 375,
+    "struct_out": 266
+  },
+  "cost_usd": 0.002748,
+  "latency_ms": 8185
+}

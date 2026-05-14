@@ -1,0 +1,29 @@
+region           = "us-east-1"
+env_name         = "prod"
+image_tag        = "latest"
+vpc_cidr         = "10.40.0.0/16"
+db_master_user   = "pulseadmin"
+instance_count   = 1
+container_cpu    = 512
+container_memory = 1024
+container_port   = 8000
+
+# REQUIRED — pre-created ACM certificate in us-east-1 covering your domain
+certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/REPLACE-ME"
+
+# Optional Route53
+route53_zone_id = ""
+domain_name     = ""
+
+# Non-secret app config (stored in SSM Parameter Store)
+app_version       = "1.0.0"
+allowed_origins   = "https://app.example.com"
+llm_daily_cap_usd = "10"
+
+# Storage
+storage_backend = "efs"
+s3_bucket_name  = ""
+
+# Aurora Serverless v2 capacity
+aurora_min_acu = 0.5
+aurora_max_acu = 2

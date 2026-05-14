@@ -1,0 +1,221 @@
+name: Deploy to AWS (ECS Fargate)
+
+# Triggers:
+#  - push to `main`     -> auto deploy to staging
+#  - workflow_dispatch  -> manual deploy to staging|prod
+#
+# NOTE on migrations: We intentionally do NOT run a separate migrate job.
+# Database migrations run on app boot, guarded by a Postgres advisory lock,
+# so it is safe for multiple Fargate tasks to start concurrently — only one
+# will actually apply migrations while the others wait. This keeps the
+# pipeline simpler and avoids needing a one-shot ECS RunTask step.
+# Trade-off: a bad migration cannot be detected before the rolling deploy
+# starts. Mitigation: we snapshot RDS *before* updating the service, so
+# rollback = restore snapshot + redeploy previous task definition.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - prod
+
+concurrency:
+  group: deploy-${{ github.event.inputs.env || 'staging' }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write   # required for OIDC -> AWS
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Lint & test
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install backend deps
+        run: |
+          if [ -f backend/requirements.txt ]; then
+            pip install -r backend/requirements.txt
+          fi
+          pip install pytest
+
+      - name: py_compile backend
+        run: python -m compileall -q backend/
+
+      - name: pytest
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ -q
+          else
+            echo "No tests/ directory; skipping."
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Frontend check
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run check
+
+  # ---------------------------------------------------------------------------
+  # 2. Build & push image to ECR (multi-arch)
+  # ---------------------------------------------------------------------------
+  build-push:
+    name: Build & push image
+    needs: lint
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.env || 'staging' }}
+    outputs:
+      image_tag: ${{ steps.meta.outputs.sha }}
+      previous_task_def: ${{ steps.prevtd.outputs.arn }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute tags
+        id: meta
+        run: echo "sha=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region:     ${{ vars.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Capture current task definition ARN (for rollback)
+        id: prevtd
+        run: |
+          ARN=$(aws ecs describe-services \
+            --cluster "${{ vars.ECS_CLUSTER }}" \
+            --services "${{ vars.ECS_SERVICE }}" \
+            --query 'services[0].taskDefinition' \
+            --output text 2>/dev/null || echo "")
+          echo "arn=$ARN" >> "$GITHUB_OUTPUT"
+          echo "Previous task def: $ARN"
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push (multi-arch)
+        env:
+          ECR_REPO: ${{ vars.ECR_REPO }}
+          SHA:      ${{ steps.meta.outputs.sha }}
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -f Dockerfile.prod \
+            -t $ECR_REPO:$SHA \
+            -t $ECR_REPO:latest \
+            --push \
+            .
+
+  # ---------------------------------------------------------------------------
+  # 3. Deploy: snapshot DB -> update service -> wait stable -> smoke test
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to ECS
+    needs: build-push
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.env || 'staging' }}
+    env:
+      ENV_NAME: ${{ github.event.inputs.env || 'staging' }}
+      SHA:      ${{ needs.build-push.outputs.image_tag }}
+      PREV_TD:  ${{ needs.build-push.outputs.previous_task_def }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region:     ${{ vars.AWS_REGION }}
+
+      # ---- 3a. Pre-deploy snapshot ----
+      - name: Snapshot Aurora cluster
+        run: |
+          SNAP_ID="pulse-${ENV_NAME}-pre-deploy-${SHA}"
+          echo "Creating snapshot: $SNAP_ID"
+          aws rds create-db-cluster-snapshot \
+            --db-cluster-identifier   "${{ vars.RDS_CLUSTER_ID }}" \
+            --db-cluster-snapshot-identifier "$SNAP_ID"
+          echo "Waiting for snapshot to become available..."
+          aws rds wait db-cluster-snapshot-available \
+            --db-cluster-snapshot-identifier "$SNAP_ID"
+          echo "snapshot_id=$SNAP_ID" >> "$GITHUB_ENV"
+
+      # ---- 3b. Roll the service ----
+      - name: Force new ECS deployment
+        run: |
+          aws ecs update-service \
+            --cluster "${{ vars.ECS_CLUSTER }}" \
+            --service "${{ vars.ECS_SERVICE }}" \
+            --force-new-deployment >/dev/null
+          echo "Update triggered; waiting for steady state..."
+
+      - name: Wait for service to stabilise
+        run: |
+          aws ecs wait services-stable \
+            --cluster  "${{ vars.ECS_CLUSTER }}" \
+            --services "${{ vars.ECS_SERVICE }}"
+
+      # ---- 3c. Smoke test ----
+      - name: Smoke test /api/health
+        id: smoke
+        run: |
+          set -e
+          URL="https://${{ vars.ALB_DNS }}/api/health"
+          echo "Hitting $URL"
+          for i in 1 2 3 4 5; do
+            BODY=$(curl -fsS --max-time 10 "$URL" || echo "")
+            STATUS=$(echo "$BODY" | python -c 'import sys,json;print(json.loads(sys.stdin.read() or "{}").get("status","missing"))' 2>/dev/null || echo "parse-error")
+            echo "Attempt $i: status=$STATUS body=$BODY"
+            if [ "$STATUS" = "ok" ]; then
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::Smoke test failed; status was not 'ok'."
+          exit 1
+
+      # ---- 3d. Rollback on failure ----
+      - name: Rollback on failure
+        if: failure() && env.PREV_TD != ''
+        run: |
+          echo "::warning::Rolling back to previous task definition: $PREV_TD"
+          aws ecs update-service \
+            --cluster "${{ vars.ECS_CLUSTER }}" \
+            --service "${{ vars.ECS_SERVICE }}" \
+            --task-definition "$PREV_TD" \
+            --force-new-deployment >/dev/null
+          aws ecs wait services-stable \
+            --cluster  "${{ vars.ECS_CLUSTER }}" \
+            --services "${{ vars.ECS_SERVICE }}" || true
+          echo "::warning::Rollback complete. Snapshot ${snapshot_id:-<none>} retained for manual restore if needed."

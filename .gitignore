@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# Build
+frontend/build/
+frontend/.svelte-kit/
+*.egg-info/
+dist/
+
+# Environment / secrets — NEVER COMMIT
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+
+# Data + DB backups (contain PII)
+data/
+backups/
+*.sql.bak
+*.dump
+pgdata/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local-only notes
+TODO.local
+NOTES.local
+*.local.md
+
+# Bench outputs
+bench/*.xlsx

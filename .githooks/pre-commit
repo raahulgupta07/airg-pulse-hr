@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# PULSE pre-commit hook — mirrors .github/workflows/migration-lint.yml.
+# Block destructive SQL in db/migrations/*.sql before the commit lands.
+# Bypass with --no-verify (CI will still catch you).
+
+set -u
+
+staged=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^db/migrations/.*\.sql$' || true)
+if [ -z "$staged" ]; then
+  exit 0
+fi
+
+fail=0
+forbidden=(
+  'RENAME COLUMN'
+  'ALTER COLUMN .* TYPE'
+  'TRUNCATE'
+  'DROP COLUMN'
+)
+
+for f in $staged; do
+  [ -f "$f" ] || continue
+  for pat in "${forbidden[@]}"; do
+    if grep -iEn "$pat" "$f" >/dev/null; then
+      echo "pre-commit: forbidden pattern '$pat' in $f"
+      grep -iEn "$pat" "$f" | sed "s|^|  $f: |"
+      fail=1
+    fi
+  done
+  if grep -iEn 'DROP TABLE' "$f" >/dev/null; then
+    if grep -iEn 'DROP TABLE[[:space:]]+IF EXISTS' "$f" >/dev/null \
+       && grep -iEn 'CREATE TABLE' "$f" >/dev/null; then
+      :  # idempotent re-create OK
+    else
+      echo "pre-commit: forbidden 'DROP TABLE' in $f"
+      grep -iEn 'DROP TABLE' "$f" | sed "s|^|  $f: |"
+      fail=1
+    fi
+  fi
+done
+
+if [ $fail -ne 0 ]; then
+  echo ""
+  echo "Commit blocked. See UPGRADE.md section 1 (Golden Rules)."
+  echo "Override with --no-verify only if you also plan to apply the"
+  echo "'allow-destructive-migration' PR label and ship a data-migration script."
+  exit 1
+fi
+
+exit 0
