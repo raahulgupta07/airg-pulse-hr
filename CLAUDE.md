@@ -4,7 +4,64 @@
 
 Unified org platform: AI hiring + internal comms + job posting + broadcast/ads + candidate matching + HR Brain chatbot.
 
+**Repo**: `raahulgupta07/airg-pulse-hr` (GitHub) · **License**: Proprietary — All Rights Reserved (see `LICENSE`). Source visibility does NOT grant any license. Commercial/partnership: raahulgupta07apple3@gmail.com.
+
 > **Agent quick-start:** see [`AGENTS.md`](./AGENTS.md) (orientation, hard rules, file map) + [`ARCHITECTURE.md`](./ARCHITECTURE.md) (data flows, topology). This file = full reference.
+
+## 2026-05-14 (deploy) — GitHub push + proprietary LICENSE + bulk delete
+
+### Git init + first push
+- `git init -b main` in repo root. `git remote add origin git@github.com:raahulgupta07/airg-pulse-hr.git`. Pushed `main`.
+- 400 files, 98,644 lines initial commit. Co-authored Claude Opus 4.7.
+- Repo currently **public**. Switch to private via `gh repo edit raahulgupta07/airg-pulse-hr --visibility private` if needed.
+
+### `.gitignore` hardening (pre-push)
+Added beyond original list:
+- `.env.*` (except `.env.example`) — was only `.env.local`
+- `data/` (full dir, was only `data/cvs|screenshots|exports|uploads`) — covers any new subdirs
+- `backups/` — pg_dump snapshots contain PII
+- `pgdata/` — Postgres data dir
+- `*.pem`, `*.key`, `*.crt`, `secrets/` — TLS material
+- `*.log`, `logs/` — app logs may contain user input/PII
+- `.pytest_cache/`, `.coverage`, `htmlcov/`
+- `*.pyo`, `*.pyd`, `.mypy_cache/`, `.ruff_cache/`
+- `TODO.local`, `NOTES.local`, `*.local.md` — dev scratchpads
+- `bench/*.xlsx` — vision bench data may include test CVs
+
+### Pre-push secret scan
+- Scanned all 400 staged files for: `sk-or-v1-*` (OpenRouter), `JWT_SECRET=[a-f0-9]{40,}` (live JWT), `SUPERADMIN_PASS_HASH=$2[abxy]$` (bcrypt), live admin password `e5JfjjKIqYgprMQ1`, live JWT secret `4c48c822...bae11`.
+- Result: **clean**. Only placeholder `$2b$12$...` in CLAUDE.md (false positive).
+- `.env`, `backups/pre-deploy-2026-05-14.sql`, `pgdata/` all confirmed NOT staged.
+
+### `LICENSE` — proprietary custom
+- Copyright 2026 Rahul Gupta, All Rights Reserved.
+- Explicit prohibitions: use, copy, modify, distribute, sublicense, lease, sell, reverse-engineer, decompile, ML training, removing notices.
+- Permitted: view-for-evaluation, factual references in commentary.
+- Third-party OSS deps keep their own licenses (FastAPI, SvelteKit, etc).
+- Standard NO WARRANTY + liability cap clauses.
+- GitHub will show "Other" license badge (no SPDX match).
+
+### Bulk delete (CV + JD repos)
+**Backend** (`backend/routes/bulk.py`):
+- `POST /api/bulk/delete-candidates` — admin+, max 200 ids/call, hard DELETE FROM candidates, FK cascade triggers, best-effort `pdf_path` file unlink. Returns `{deleted, total}`.
+- `POST /api/bulk/delete-jds` — admin+, max 200 ids/call, hard DELETE FROM jd_repository, FK cascade.
+- Note: `require_role()` takes single role arg; both endpoints gate on `"admin"` (which `has_min_role` accepts superadmin too via role hierarchy).
+
+**Frontend CV repo** (`routes/candidates/+page.svelte`):
+- Bug fix: table-header `<th>` checkbox handler ignored `compareMode` — header click did nothing when compare mode active. Now branches: in compare mode toggles `compareIds` (capped at 5); else toggles `selectedIds` for all visible rows.
+- Bulk toolbar in select-all bar gained: `Delete N` (coral danger button) + `Clear` button. Confirm dialog before delete. Optimistic local filter then await + reload.
+- New `bulkDeleteCandidates()` fn calls new bulk endpoint.
+
+**Frontend JD repo** (`routes/jds/+page.svelte`):
+- `jdBulkDelete()` rewired: was N parallel `DELETE /jds/{id}?hard=true` (slow + per-row creator check could 403 mid-batch). Now single `/bulk/delete-jds` call with optimistic remove. Returns `r.deleted` count.
+
+### Files added/modified
+- New: `LICENSE`, hardened `.gitignore`
+- Backend: `routes/bulk.py` (+2 endpoints, ~50 LOC)
+- Frontend: `routes/candidates/+page.svelte` (toolbar + handler fixes), `routes/jds/+page.svelte` (delete rewire)
+
+### Image
+- `hub-hr-agent-api:latest` rebaked with bulk delete endpoints. Container restarted clean.
 
 ## 2026-05-14 — Stage-aligned candidates + 8 new agents + expiry/audit + agent config
 

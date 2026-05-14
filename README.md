@@ -4,7 +4,22 @@
 >
 > Unified org platform — AI hiring, internal communications, job posting, broadcast & ads, candidate matching, HR Brain chatbot. (Formerly HIRE / DASH.)
 
+**Repo**: https://github.com/raahulgupta07/airg-pulse-hr
+**License**: Proprietary — All Rights Reserved (see [`LICENSE`](./LICENSE)). Source visibility ≠ license grant. Commercial / partnership inquiries: raahulgupta07apple3@gmail.com.
+
 > **For new agents / devs onboarding:** read [`AGENTS.md`](./AGENTS.md) (5-min orientation) + [`ARCHITECTURE.md`](./ARCHITECTURE.md) (one-page system map) before touching code.
+
+## Recent changes (2026-05-14 final) — GitHub push + LICENSE + bulk delete
+
+- Repo pushed to GitHub: `raahulgupta07/airg-pulse-hr`. 400 files, 98,644 lines, branch `main`.
+- `.gitignore` hardened: excludes `.env`, `.env.*` (except `.env.example`), `data/`, `backups/` (PII pg_dump), `pgdata/`, `*.pem/.key/.crt`, `secrets/`, logs, pytest caches, ide files, local notes, bench xlsx.
+- Pre-push secret scan: 0 live secrets staged (no OpenRouter key, JWT_SECRET, bcrypt hash, admin password). Confirmed via grep across all 400 files.
+- `LICENSE` added — proprietary "All Rights Reserved" custom license. No use, copy, modify, distribute, reverse-engineer, or ML-training rights granted by repo visibility. View-for-evaluation only.
+- Bulk delete shipped:
+  - `POST /api/bulk/delete-candidates` (admin+, max 200, hard delete + cascade + file unlink)
+  - `POST /api/bulk/delete-jds` (admin+, max 200, hard delete + cascade)
+  - CV repo: select-all checkbox now branches on `compareMode` (was no-op when in compare mode). Added `Delete N` red + `Clear` buttons to bulk toolbar.
+  - JD repo: existing `jdBulkDelete()` rewired from N parallel `DELETE /jds/{id}?hard=true` to single `/bulk/delete-jds` call. Optimistic remove + reload.
 
 ## Recent changes (2026-05-14) — Pipeline-aligned candidates + 8 new agents + expiry/audit + agent config
 
