@@ -99,11 +99,18 @@ services:
       # Wipe:    `docker compose down && docker volume rm hub-hr-agent_hire-data`
       - hire-data:/data
       # ----------------------------------------------------------------------
-      # Frontend build (live edits survive container recreate)
-      # `npm run build` → ./frontend/build → served at /app/static-frontend
-      # No need to rebuild image after frontend changes.
+      # Frontend build
+      # Image bakes /app/static-frontend at build time (Dockerfile stage 1
+      # runs `npm run build`). Do NOT bind-mount ./frontend/build over it —
+      # on hosts where the build dir is empty or missing (fresh git clone,
+      # CI deploys), the mount shadows the baked output and every GET /
+      # returns 500: "File at path /app/static-frontend/index.html does not
+      # exist."
+      #
+      # For local dev hot-reload, run `cd frontend && npm run dev` against
+      # the Vite server on :5173 instead — or use a compose override file
+      # (compose.dev.yaml) that re-adds the bind for dev only.
       # ----------------------------------------------------------------------
-      - ./frontend/build:/app/static-frontend:ro
     environment:
       DB_HOST: db
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY in .env}
