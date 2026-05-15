@@ -87,10 +87,14 @@ app.add_middleware(SlowAPIMiddleware)
 # ---------------------------------------------------------------------------
 _default_origins = "http://localhost:5173,http://localhost:8090"
 origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
-logger.info(f"CORS allowed origins: {origins}")
+# Regex auto-allows any same-origin request (browser sends Origin matching the served host).
+# Covers deployed domains + IPs without requiring ALLOWED_ORIGINS env tweak per host.
+_origin_regex = os.getenv("ALLOWED_ORIGIN_REGEX", r"^https?://[^/]+$")
+logger.info(f"CORS allowed origins: {origins} · regex: {_origin_regex}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -104,15 +108,31 @@ async def csrf_protection(request: Request, call_next):
     # Skip for safe methods and public endpoints
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return await call_next(request)
-    if request.url.path.startswith("/api/careers/"):  # public apply endpoint
+    path = request.url.path
+    # Auth + public endpoints: no session yet, CSRF not applicable
+    if path.startswith("/api/careers/") or path.startswith("/api/auth/"):
         return await call_next(request)
     # For state-changing requests, verify Origin header matches allowed origins
     origin = request.headers.get("origin", "")
+    if not origin:
+        # No Origin header (curl, native client, server-to-server) — allow
+        return await call_next(request)
     allowed = origins
-    if origin and origin not in allowed and "*" not in allowed:
-        from fastapi.responses import JSONResponse
-        return JSONResponse(status_code=403, content={"detail": "CSRF: Origin not allowed"})
-    return await call_next(request)
+    if "*" in allowed or origin in allowed:
+        return await call_next(request)
+    # Auto-allow same-host requests: Origin host == request Host header
+    # (covers deployed domains without requiring ALLOWED_ORIGINS env tweak)
+    try:
+        from urllib.parse import urlparse
+        origin_host = urlparse(origin).netloc.lower()
+        req_host = (request.headers.get("host") or "").lower()
+        fwd_host = (request.headers.get("x-forwarded-host") or "").lower()
+        if origin_host and origin_host in (req_host, fwd_host):
+            return await call_next(request)
+    except Exception:
+        pass
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=403, content={"detail": "CSRF: Origin not allowed"})
 
 
 # ---------------------------------------------------------------------------

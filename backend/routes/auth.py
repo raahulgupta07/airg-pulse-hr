@@ -376,17 +376,19 @@ async def logout(response: Response):
 # Bootstrap superadmin from env (called from main.py startup)
 # ---------------------------------------------------------------------------
 def bootstrap_superadmin() -> None:
-    sid = os.getenv("SUPERADMIN_ID")
-    if not sid:
-        return
+    # Defaults so first boot always has a working admin login.
+    # Override via env: SUPERADMIN_ID / SUPERADMIN_PASS_HASH / SUPERADMIN_PASS
+    sid = (os.getenv("SUPERADMIN_ID") or "pulse_admin").strip()
     pass_hash = os.getenv("SUPERADMIN_PASS_HASH")
     if not pass_hash:
-        plain = os.getenv("SUPERADMIN_PASS")
-        if not plain:
-            logger.warning("SUPERADMIN_ID set but no SUPERADMIN_PASS_HASH or SUPERADMIN_PASS")
-            return
+        plain = os.getenv("SUPERADMIN_PASS") or "admin"
         pass_hash = hash_pw(plain)
-        logger.warning("Use SUPERADMIN_PASS_HASH in prod (plaintext SUPERADMIN_PASS hashed at startup)")
+        if plain == "admin":
+            logger.warning(
+                "Using default superadmin password 'admin' — change SUPERADMIN_PASS in .env before production."
+            )
+        else:
+            logger.warning("Plaintext SUPERADMIN_PASS hashed at startup (set SUPERADMIN_PASS_HASH for prod).")
     try:
         # `email` + `display_name` are legacy NOT NULL columns from the
         # pre-M2 users table; bootstrap synthesizes them from operator_id

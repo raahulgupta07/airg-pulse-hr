@@ -113,11 +113,23 @@ services:
       # ----------------------------------------------------------------------
     environment:
       DB_HOST: db
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY in .env}
+      # OPENROUTER_API_KEY optional at boot — AI features degrade gracefully if absent.
+      # Set in .env to enable: AI summary, chat, JD enrich, vision OCR, matching.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       WAIT_FOR_DB: "true"
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # Safe defaults for first-boot — no .env needed
+      JWT_SECRET: ${JWT_SECRET:-}
+      SUPERADMIN_ID: ${SUPERADMIN_ID:-pulse_admin}
+      SUPERADMIN_PASS: ${SUPERADMIN_PASS:-admin}
+      DEV_MODE: ${DEV_MODE:-false}
+      WORKERS: ${WORKERS:-1}
+      OCR_CONCURRENCY: ${OCR_CONCURRENCY:-1}
+      RATE_LIMIT: ${RATE_LIMIT:-600/minute}
+      ALLOWED_ORIGIN_REGEX: ${ALLOWED_ORIGIN_REGEX:-^https?://[^/]+$$}
     env_file:
-      - .env
+      - path: .env
+        required: false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
@@ -175,7 +187,8 @@ services:
     volumes:
       - hire-backups:/backups
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       PGPASSWORD: ${DB_PASS:-pulse_secret}
       DB_USER: ${DB_USER:-pulse}
