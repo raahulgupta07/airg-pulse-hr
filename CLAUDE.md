@@ -8,6 +8,105 @@ Unified org platform: AI hiring + internal comms + job posting + broadcast/ads +
 
 > **Agent quick-start:** see [`AGENTS.md`](./AGENTS.md) (orientation, hard rules, file map) + [`ARCHITECTURE.md`](./ARCHITECTURE.md) (data flows, topology). This file = full reference.
 
+## 2026-05-15 — Zero-config deploy (engineer can't break the boot)
+
+**Goal**: engineer pulls repo, edits 4 lines in `.env`, runs `docker compose up -d --build`, logs in. Nothing else.
+
+### Install (manual, the way engineers actually do it)
+```bash
+git clone https://github.com/raahulgupta07/airg-pulse-hr.git
+cd airg-pulse-hr
+cp .env.example .env
+nano .env       # set OPENROUTER_API_KEY, SUPERADMIN_ID, SUPERADMIN_PASS, PORT
+docker compose up -d --build
+# wait ~60s
+curl http://localhost:8090/api/health
+# open http://<host>:<PORT>, log in with SUPERADMIN_ID / SUPERADMIN_PASS
+```
+
+### Install (interactive alternative)
+```bash
+./setup.sh      # prompts for 4 values, writes .env, builds, boots
+```
+
+### Upgrade flow
+```bash
+./scripts/pre_upgrade.sh                     # snapshot DB + files
+git pull origin main
+docker compose up -d --build
+curl -s http://localhost:8090/api/health | jq '{status, migrations}'
+```
+Migrations auto-run on boot under `pg_advisory_lock(13371337)`. Health endpoint returns 503 until migrations clear, so ALB / reverse proxy holds traffic.
+
+Rollback: `git reset --hard <sha> && docker compose up -d --build`. Restore dump if a destructive migration ran (`scripts/restore.sh`).
+
+### Hardening that makes the above bulletproof
+
+**1. `backend/core/jwt_auth.py` — auto-managed JWT secret**
+- `_secret()` reads `JWT_SECRET` env. Rejects bogus values (empty, `change-me`, `secret`, `none`, <32 chars, <6 unique chars) and falls back to auto-gen.
+- `_autogen_secret()` writes random 64-hex to first writable path in `[/data/.jwt_secret, /var/lib/pulse/.jwt_secret, /tmp/.pulse_jwt_secret]`. In-memory last resort.
+- Cached per-process so each call returns the same value. `reset_cache()` exposed for tests.
+
+**2. `backend/routes/auth.py::bootstrap_superadmin` — defaults + auto-unlock**
+- `SUPERADMIN_ID` default = `pulse_admin`. `SUPERADMIN_PASS` default = `admin` (logs rotation warning).
+- UPSERT runs every boot. `ON CONFLICT DO UPDATE` sets `pass_hash = EXCLUDED.pass_hash, role='superadmin', failed_login_count=0, locked_until=NULL`. So any lockout from prior 5-fail attempts clears on `docker compose restart api`.
+
+**3. `backend/main.py` — CSRF + CORS tolerance**
+- CSRF middleware skips `/api/auth/*` (login has no session yet — CSRF inapplicable) and `/api/careers/*` (public).
+- Missing `Origin` header → allow (curl, server-to-server).
+- Same-host auto-allow: `urlparse(origin).netloc` matches `Host` or `X-Forwarded-Host` → pass without env tweak.
+- CORS: adds `allow_origin_regex=^https?://[^/]+$` (env `ALLOWED_ORIGIN_REGEX`). With `allow_credentials=True`, Starlette echoes back the matched origin (no `*` exposure). Bearer auth — not cookies — so credentials flag is mostly cosmetic.
+
+**4. `compose.yaml` — safe defaults, optional .env**
+- `OPENROUTER_API_KEY` no longer required at boot (`${OPENROUTER_API_KEY:-}` instead of `:?` mandatory). AI features check `bool(OPENROUTER_API_KEY and not placeholder)` and log "LLM call skipped" without crashing.
+- `env_file: [{path: .env, required: false}]` — boot succeeds even with no `.env`.
+- Service `environment:` block sets `SUPERADMIN_ID=pulse_admin`, `SUPERADMIN_PASS=admin`, `DEV_MODE=false`, `WORKERS=1`, `OCR_CONCURRENCY=1`, `RATE_LIMIT=600/minute`, `ALLOWED_ORIGIN_REGEX=^https?://[^/]+$$` as fallbacks (the `:-` operator preserves any `.env` override).
+- Backup sidecar also gets `env_file: required: false`.
+
+**5. `scripts/entrypoint.sh` — filesystem prep**
+- `mkdir -p /data /data/cvs /data/screenshots /data/uploads /data/exports /data/brain_uploads` + `chmod -R u+rwX` on every boot.
+- DB-ready loop capped at 120s (was infinite). Proceeds anyway if exceeded — app retries.
+- Default `WORKERS=1` (was 2). Matches single-worker queue assumption.
+
+**6. `.env.example` rewritten**
+- 4 values in REQUIRED block at top: `OPENROUTER_API_KEY`, `SUPERADMIN_ID`, `SUPERADMIN_PASS`, `PORT`.
+- All other settings commented with default hints. Engineer never sees `DB_PASS`, `JWT_SECRET`, model overrides, CORS regex, etc unless they go looking.
+
+**7. `setup.sh` (new)**
+- Interactive prompts (4 inputs), auto-generates strong `DB_PASS` + `JWT_SECRET` via `openssl rand`, writes `.env` 0600, builds, boots, polls health, prints login URL.
+- Re-run-safe: detects existing `.env`, prompts overwrite, backs up to `.env.bak.YYYYMMDD_HHMMSS`.
+
+### Smoke-tested locally
+```
+cp .env.example .env   (no edits)
+docker compose up -d --build
+→ 4 containers healthy
+→ POST /api/auth/login {pulse_admin / admin} = 200 OK + JWT
+→ POST /api/auth/login w/ arbitrary Origin = 200 OK (CSRF/CORS pass)
+→ 0 errors in logs (3 expected warnings: auto-gen JWT, default password, verifier model alias)
+```
+
+### Failure-mode coverage (what previously broke the engineer, now self-heals)
+| Engineer mistake | Old result | New result |
+|---|---|---|
+| Forgets `OPENROUTER_API_KEY` | Compose refuses to start (`:?` mandatory) | App boots, AI off, CV pipeline still works |
+| Forgets `JWT_SECRET` | App crashes at boot (`RuntimeError`) | Auto-gen, persisted to `/data/.jwt_secret` |
+| Uses `change-me` JWT secret | Boots with weak secret | Detected, ignored, auto-gen used |
+| Forgets `SUPERADMIN_PASS_HASH` | Bootstrap silently skips → 401 on login | Defaults to plaintext `admin`, bcrypted at boot |
+| 5 failed logins → lockout | Permanent until manual SQL UPDATE | Cleared on next `docker compose restart api` |
+| Deploys behind public domain | 403 CSRF "Origin not allowed" | Same-host auto-allow, no env tweak |
+| Skips `.env` entirely | `OPENROUTER_API_KEY:?` aborts compose | Boots clean with all defaults |
+| Forgets to chmod `/data` | `[startup] writable=False` | Entrypoint auto-mkdir + chmod |
+| Wrong port already in use | `bind: address already in use` | Doc'd in Troubleshooting — `PORT=8091` in `.env` |
+
+### Files added/modified
+- New: `setup.sh` (interactive installer, ~150 LOC)
+- Modified: `backend/core/jwt_auth.py` (+89 LOC — auto-gen + validation), `backend/main.py` (+30 LOC — CSRF/CORS), `backend/routes/auth.py` (defaults), `compose.yaml` (optional env_file + safe defaults), `scripts/entrypoint.sh` (mkdir + chmod), `.env.example` (rewrite — 4-field top, rest commented)
+- Updated: `README.md` (Path A rewritten — manual + interactive, upgrade flow, operations, troubleshooting table)
+
+### Git
+- Commit `e63278b` on `origin/main`. 7 files, +417/-112.
+
 ## 2026-05-14 (deploy) — GitHub push + proprietary LICENSE + bulk delete
 
 ### Git init + first push

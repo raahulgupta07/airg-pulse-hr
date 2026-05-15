@@ -341,52 +341,136 @@ Two install paths. Same codebase, env decides target.
 
 ### Path A — Docker Compose (local + beta)
 
-Prerequisites: Docker 24+ with Compose V2.
+**Prerequisites**: Docker 24+ with Compose V2, ~4 GB free RAM, ~5 GB disk.
+
+Two ways to install. Pick one.
+
+#### A1. Manual flow (most engineers)
 
 ```bash
-# 1. Clone + env
-git clone <repo-url> && cd HUB-HR-Agent
+# 1. Clone
+git clone https://github.com/raahulgupta07/airg-pulse-hr.git
+cd airg-pulse-hr
+
+# 2. Create .env from template
 cp .env.example .env
-# Edit .env: set OPENROUTER_API_KEY (required), keep DB defaults or change
 
-# 2. First-time superadmin password hash
-docker compose run --rm --entrypoint "" api python -m backend.scripts.hash_pw 'YourStrongPass123'
-# Copy the printed bcrypt hash
+# 3. Edit ONLY the 4 values at the top of .env:
+#    OPENROUTER_API_KEY=sk-or-v1-...   (leave blank to skip AI features)
+#    SUPERADMIN_ID=pulse_admin
+#    SUPERADMIN_PASS=<your-strong-password>
+#    PORT=8090
+nano .env
 
-# 3. Append production secrets to .env
-cat >> .env <<'EOF'
-SUPERADMIN_ID=admin
-SUPERADMIN_PASS_HASH=<paste-hash-here>
-JWT_SECRET=<openssl rand -hex 32>
-FILE_SIGN_SECRET=<openssl rand -hex 32>
-ALLOWED_ORIGINS=http://localhost:8090
-APP_VERSION=1.0.0-beta
-EOF
-
-# 4. Build + start (3 containers: api, db, backup sidecar)
+# 4. Build + start (4 containers: api, db, redis, backup sidecar)
 docker compose up -d --build
+# First build pulls images + installs deps: ~5–15 min.
 
-# 5. Verify
-curl http://localhost:8090/api/health    # status:ok, migrations:[]
-docker compose ps                         # all healthy
+# 5. Wait for healthy + verify
+until curl -sf http://localhost:8090/api/health; do sleep 3; done
+docker compose ps    # all should show "healthy"
 ```
 
-Open http://localhost:8090/login → operator_id `admin` + your password.
+Open `http://<host>:8090` → log in with the `SUPERADMIN_ID` / `SUPERADMIN_PASS` you set.
 
-**Upgrades** (preserves all data + settings):
+**Everything else is auto-handled by the app/compose defaults** — `JWT_SECRET` is
+auto-generated and persisted to `/data/.jwt_secret`, `DB_PASS` defaults to
+`pulse_secret`, CSRF/CORS accept same-host origins, `/data/cvs` is auto-created
+and chmod'd, account lockouts clear every restart. Override anything in `.env`
+if you need to (see the commented OPTIONAL section in `.env.example`).
+
+#### A2. Interactive setup (no editor needed)
+
 ```bash
-./scripts/pre_upgrade.sh                  # snapshot DB + CV files
-git pull
-docker compose up -d --build
-curl http://localhost:8090/api/health     # verify status:ok
+git clone https://github.com/raahulgupta07/airg-pulse-hr.git
+cd airg-pulse-hr
+./setup.sh
+# Answers 4 prompts → writes .env → builds → boots → prints login URL.
 ```
 
-**Disaster recovery**:
+#### Verify install
+
 ```bash
+curl -s http://localhost:8090/api/health | jq .status        # "ok"
+curl -s http://localhost:8090/api/health | jq .migrations    # applied N, pending []
+docker logs pulse-api --tail 80 | grep -iE "error|started"   # spot check
+```
+
+If the API does not come up healthy within ~2 min, see [Troubleshooting](#troubleshooting).
+
+---
+
+### Upgrades (existing install → new commit)
+
+Preserves all data, settings, users, CVs, and JD repository.
+
+```bash
+# 1. Snapshot DB + files
+./scripts/pre_upgrade.sh
+# Writes ./data/backups/pre_upgrade_<timestamp>.dump.gz
+
+# 2. Pull latest
+git fetch origin
+git pull origin main
+
+# 3. Rebuild + restart (migrations auto-run on boot, advisory-locked)
+docker compose up -d --build
+
+# 4. Verify
+curl -s http://localhost:8090/api/health | jq '{status, migrations}'
+docker logs pulse-api --tail 50 | grep -iE "migration|started"
+```
+
+**Roll back** if the new build is broken:
+```bash
+git reset --hard <previous-commit-sha>
+docker compose up -d --build
+# If a destructive migration ran, restore the dump:
 ./scripts/restore.sh ./data/backups/pre_upgrade_<timestamp>.dump.gz --confirm
 ```
 
-See `UPGRADE.md` for full upgrade flow + rollback.
+The migration runner is **additive-only** by default (DROP / RENAME / ALTER
+TYPE / TRUNCATE are blocked unless `ALLOW_DESTRUCTIVE_MIGRATIONS=1` is set),
+so most rollbacks just need the code revert + container rebuild.
+
+See `UPGRADE.md` for full upgrade flow + rollback details.
+
+### Common operations
+
+```bash
+docker compose ps                       # container status
+docker logs -f pulse-api                # tail api logs
+docker logs -f pulse-db                 # tail db logs
+docker compose restart api              # restart api only
+docker compose down                     # stop, keep data
+docker compose down -v                  # stop + WIPE all data (destructive)
+docker exec -it pulse-db psql -U pulse -d pulsedb    # psql shell
+docker exec -it pulse-api bash          # api shell
+./scripts/backup.sh                     # manual pg_dump now
+```
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `bind: address already in use` on `:8090` | Port busy on host | Set `PORT=8091` in `.env`, restart |
+| Login returns 401 | Wrong `SUPERADMIN_PASS` | Edit `.env`, `docker compose restart api` (UPSERTs new hash on boot) |
+| Login returns 403 | `Origin` header mismatch | Already auto-allowed for same host; check reverse-proxy passes `Origin` + `X-Forwarded-Host` |
+| Account locked | 5 failed logins | Restart `pulse-api` — bootstrap clears lockout on every boot |
+| `/api/health` returns 503 | Migration pending or DB unreachable | `docker logs pulse-api \| grep -i migration`, fix SQL, restart |
+| `[startup] CV storage path=/data/cvs writable=False` | Volume perm issue | `docker exec pulse-api ls -la /data` — entrypoint auto-chmods, but custom bind mounts need `chmod 777 ./data` on host first |
+| `[cache] Redis unavailable` | Redis container down | App still runs (in-mem fallback). `docker compose up -d redis` to recover |
+| AI features return errors | `OPENROUTER_API_KEY` missing/invalid | Set valid key in `.env`, `docker compose restart api` |
+| Vision verifier model warning | Anthropic alias deprecated | Set `ENABLE_VISION_VERIFIER=false` or pin `VISION_VERIFIER_MODEL` to a current ID |
+| OOM kills on CV upload | Box <8 GB RAM, too many OCR workers | Set `OCR_CONCURRENCY=1 WORKERS=1` in `.env`, restart |
+| Frontend 404 / blank page | Bind-mount shadowed image static dir | Already removed — make sure `compose.yaml` has no `./frontend/build:/app/static-frontend` |
+
+Reset everything (last resort, **destroys all data**):
+```bash
+docker compose down -v
+rm -rf data/   # if you had bind mounts
+docker compose up -d --build
+```
 
 ---
 
